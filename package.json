@@ -1,0 +1,34 @@
+{
+  "cordova": {
+    "id": "cordova-plugin-headset-control",
+    "platforms": [
+      "ios",
+      "android"
+    ]
+  },
+  "dependencies": {},
+  "description": "Detect and control a wired or Bluetooth headset.",
+  "devDependencies": {},
+  "directories": {},
+  "keywords": [
+    "cordova",
+    "bluetooth",
+    "headset",
+    "headset detection",
+    "headset control",
+    "headset connect",
+    "ecosystem:cordova",
+    "cordova-ios",
+    "cordova-android"
+  ],
+  "license": "Proprietary",
+  "maintainers": [
+    {
+      "name": "Wayne Fisher",
+      "email": "wayne@fisherlea.com"
+    }
+  ],
+  "name": "cordova-plugin-headset-control",
+  "optionalDependencies": {},
+  "version": "0.0.1"
+}

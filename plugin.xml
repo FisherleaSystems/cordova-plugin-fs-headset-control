@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<plugin xmlns="http://apache.org/cordova/ns/plugins/1.0"
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        id="cordova-plugin-headset-control"
+        version="0.0.1">
+
+  <name>Headset Control</name>
+
+  <description>Detect and control connection to a wired or Bluetooth headset.</description>
+
+  <license>Proprietary</license>
+
+  <engines>
+    <engine name="cordova" version=">=3.0.0"/>
+  </engines>
+
+  <js-module src="www/HeadsetControl.js" name="HeadsetControl">
+    <clobbers target="window.headsetControl" />
+  </js-module>
+
+  <!-- ios -->
+  <platform name="ios">
+
+    <config-file target="config.xml" parent="/*">
+      <feature name="HeadsetControl">
+        <param name="ios-package" value="HeadsetControl"/>
+        <param name="onload" value="true" />
+      </feature>
+    </config-file>
+
+    <header-file src="src/ios/HeadsetControl.h"/>
+    <source-file src="src/ios/HeadsetControl.m"/>
+  </platform>
+
+  <!-- android -->
+  <platform name="android">
+
+    <config-file target="res/xml/config.xml" parent="/*">
+      <feature name="HeadsetControl">
+        <param name="android-package" value="com.fisherlea.headset.control.HeadsetControl" />
+      </feature>
+    </config-file>
+
+    <config-file target="AndroidManifest.xml" parent="/manifest">
+      <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS"/>
+      <uses-permission android:name="android.permission.BLUETOOTH" />
+      <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    </config-file>
+
+    <source-file src="src/android/com/fisherlea/headset/control/HeadsetControl.java" target-dir="src/com/fisherlea/headset/control"/>
+  </platform>
+
+</plugin>
