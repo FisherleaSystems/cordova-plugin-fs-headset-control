@@ -30,7 +30,7 @@
 
   <!-- android -->
   <platform name="android">
-    <preference name="android-minSdkVersion" value="23" />
+    <!-- preference name="android-minSdkVersion" value="23" / -->
 
     <config-file target="res/xml/config.xml" parent="/*">
       <feature name="HeadsetControl">
