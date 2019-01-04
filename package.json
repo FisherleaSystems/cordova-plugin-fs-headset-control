@@ -1,6 +1,6 @@
 {
   "cordova": {
-    "id": "cordova-plugin-headset-control",
+    "id": "cordova-plugin-fs-headset-control",
     "platforms": [
       "ios",
       "android"
@@ -28,7 +28,7 @@
       "email": "wayne@fisherlea.com"
     }
   ],
-  "name": "cordova-plugin-headset-control",
+  "name": "cordova-plugin-fs-headset-control",
   "optionalDependencies": {},
   "version": "0.0.2"
 }
