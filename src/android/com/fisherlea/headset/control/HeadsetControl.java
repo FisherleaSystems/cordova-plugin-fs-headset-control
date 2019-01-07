@@ -87,7 +87,6 @@ public class HeadsetControl extends CordovaPlugin {
         IntentFilter intentFilter = new IntentFilter();
         intentFilter.addAction(AudioManager.ACTION_HEADSET_PLUG);
         intentFilter.addAction(AudioManager.ACTION_SCO_AUDIO_STATE_UPDATED);
-        //intentFilter.addAction(AudioManager.ACTION_SCO_AUDIO_STATE_CHANGED);
         intentFilter.addAction(BluetoothDevice.ACTION_ACL_CONNECTED);
         intentFilter.addAction(BluetoothDevice.ACTION_ACL_DISCONNECT_REQUESTED);
         intentFilter.addAction(BluetoothDevice.ACTION_ACL_DISCONNECTED);
@@ -146,31 +145,6 @@ public class HeadsetControl extends CordovaPlugin {
                         default:
                             Log.d(LOG_TAG, "I have no idea what the SCO headset state is");
                     }
-                    /*
-                } else if (intent.getAction().equals(AudioManager.ACTION_SCO_AUDIO_STATE_CHANGED)) {
-                    state = intent.getIntExtra(AudioManager.EXTRA_SCO_AUDIO_STATE, -1);
-                    Log.d(LOG_TAG, "state: " + state);
-                    switch (state) {
-                        case AudioManager.SCO_AUDIO_STATE_DISCONNECTED:
-                            Log.d(LOG_TAG, "SCO headset is disconnected");
-                            if(connectSent) {
-                                fireConnectEvent("disconnect", "bluetooth", "sco");
-                                connectSent = false;
-                            }
-                            fireConnectEvent("disconnected", "bluetooth", "sco");
-
-                            handleSCODisconnect();
-                            break;
-                        case AudioManager.SCO_AUDIO_STATE_CONNECTED:
-                            Log.d(LOG_TAG, "SCO headset is connected");
-                            fireConnectEvent("connect", "bluetooth", "sco");
-                            fireConnectEvent("connected", "bluetooth", "sco");
-                            connectSent = true;
-                            break;
-                        default:
-                            Log.d(LOG_TAG, "I have no idea what the SCO headset state is");
-                    }
-                    */
                 } else if (intent.getAction().equals(BluetoothDevice.ACTION_ACL_CONNECTED)) {
                     BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
                     Log.d(LOG_TAG, "connect from device: " + device.getName());
