@@ -48,18 +48,18 @@
         port = ports[0];
 
         if([port.portType isEqualToString:AVAudioSessionPortBluetoothA2DP]) {
-            [self fireConnectEvent:(NSString *)@"connect" forDevice:(NSString *)@"bluetooth" withSubType:@"headset" withName:port.portName];
+            [self fireConnectEvent:(NSString *)@"connected" forDevice:(NSString *)@"bluetooth" withSubType:@"headset" withName:port.portName];
         } else if([port.portType isEqualToString:AVAudioSessionPortHeadphones]) {
-            [self fireConnectEvent:(NSString *)@"connect" forDevice:(NSString *)@"wired"];
+            [self fireConnectEvent:(NSString *)@"connected" forDevice:(NSString *)@"wired"];
         }
     } else if ([reason unsignedIntegerValue] == AVAudioSessionRouteChangeReasonOldDeviceUnavailable) {
         ports = route.outputs;
         port = ports[0];
 
         if([port.portType isEqualToString:AVAudioSessionPortBluetoothA2DP]) {
-            [self fireConnectEvent:(NSString *)@"disconnect" forDevice:(NSString *)@"bluetooth" withSubType:@"headset" withName:port.portName];
+            [self fireConnectEvent:(NSString *)@"disconnected" forDevice:(NSString *)@"bluetooth" withSubType:@"headset" withName:port.portName];
         } else if([port.portType isEqualToString:AVAudioSessionPortHeadphones]) {
-            [self fireConnectEvent:(NSString *)@"disconnect" forDevice:(NSString *)@"wired"];
+            [self fireConnectEvent:(NSString *)@"disconnected" forDevice:(NSString *)@"wired"];
         }
     }
 }
