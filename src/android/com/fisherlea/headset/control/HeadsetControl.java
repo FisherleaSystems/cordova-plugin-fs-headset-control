@@ -37,7 +37,7 @@ public class HeadsetControl extends CordovaPlugin {
     private boolean scoStarted = false;
     private boolean headsetConnected = false;
     private boolean wiredConnected = false;
-    private boolean connectSent = false;
+    private boolean scoConnected = false;
     private AudioManager audioManager;
     private BluetoothManager bluetoothManager;
     private BluetoothAdapter bluetoothAdapter;
@@ -124,19 +124,19 @@ public class HeadsetControl extends CordovaPlugin {
                     switch (state) {
                         case AudioManager.SCO_AUDIO_STATE_DISCONNECTED:
                             Log.d(LOG_TAG, "SCO headset is disconnected");
-                            if(connectSent) {
+                            if(scoConnected) {
                                 fireConnectEvent("disconnect", "bluetooth", "sco");
-                                connectSent = false;
                             }
-                            fireConnectEvent("disconnected", "bluetooth", "sco");
 
                             handleSCODisconnect();
+                            scoConnected = false;
+                            fireConnectEvent("disconnected", "bluetooth", "sco");
                             break;
                         case AudioManager.SCO_AUDIO_STATE_CONNECTED:
                             Log.d(LOG_TAG, "SCO headset is connected");
                             fireConnectEvent("connect", "bluetooth", "sco");
                             fireConnectEvent("connected", "bluetooth", "sco");
-                            connectSent = true;
+                            scoConnected = true;
                             break;
                         case AudioManager.SCO_AUDIO_STATE_CONNECTING:
                             Log.d(LOG_TAG, "SCO headset is connecting");
@@ -345,7 +345,7 @@ public class HeadsetControl extends CordovaPlugin {
                     break;
             }
 
-            Log.d(LOG_TAG, (device.isSource() ? : "source" : "  sink") + " name: " + device.getProductName() + " type: " + type);
+            Log.d(LOG_TAG, (device.isSource() ? "source" : "  sink") + " name: " + device.getProductName() + " type: " + type);
         }
 
         JSONObject status = new JSONObject();
@@ -358,7 +358,7 @@ public class HeadsetControl extends CordovaPlugin {
 
             if(headset) {
                 if(bluetooth) {
-                    status.put("connected", headsetConnected);
+                    status.put("connected", scoConnected);
                 } else {
                     status.put("connected", wiredConnected);
                 }
