@@ -5,6 +5,7 @@
 
 @property (nonatomic, strong) CDVInvokedUrlCommand * command;
 @property (nonatomic, strong) CDVPluginResult* pluginResult;
+@property (nonatomic, strong) AVAudioSessionRouteDescription *currentRoute;
 
 - (void) detect:(CDVInvokedUrlCommand*)command;
 - (void) init:(CDVInvokedUrlCommand*)command;

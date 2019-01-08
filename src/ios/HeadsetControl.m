@@ -19,6 +19,7 @@
     } else if ([reason unsignedIntegerValue] == AVAudioSessionRouteChangeReasonOldDeviceUnavailable) {
         route = [notification.userInfo objectForKey:AVAudioSessionRouteChangePreviousRouteKey];
     }
+    self.currentRoute = route;
 
 #if 0
     int i;
@@ -64,16 +65,40 @@
     }
 }
 
-- (void) detect:(CDVInvokedUrlCommand*)command {
-  NSLog(@"detect()");
+- (void) getStatus:(CDVInvokedUrlCommand*)command {
+    BOOL bluetooth = NO;
+    BOOL headset = NO;
 
-  CDVPluginResult * pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsBool:[self isHeadsetEnabled]];
-  [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
+    NSLog(@"getStatus()");
+
+    for (AVAudioSessionPortDescription* desc in [self.currentRoute outputs]) {
+        if ([[desc portType] isEqualToString:AVAudioSessionPortHeadphones]) {
+            headset = YES;
+        } else if([[desc portType] isEqualToString:AVAudioSessionPortBluetoothHFP]) {
+            headset = YES;
+            bluetooth = YES;
+        } else if( [[desc portType] isEqualToString:AVAudioSessionPortBluetoothA2DP] ) {
+            headset = YES;
+            bluetooth = YES;
+        } else if([[desc portType] isEqualToString:AVAudioSessionPortBluetoothLE]) {
+            headset = YES;
+            bluetooth = YES;
+        }
+    }
+
+    NSMutableDictionary * status = [[NSMutableDictionary alloc]init];
+    [status setValue:bluetooth forKey:@"bluetooth"];
+    [status setValue:headset forKey:@"headset"];
+    [status setValue:route.inputs.count forKey:@"sources"];
+    [status setValue:route.outputs.count forKey:@"sinks"];
+    [status setValue:YES forKey:@"connected"];
+
+    CDVPluginResult * pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsDictionary:event];
+    [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
 }
 
 - (void) init:(CDVInvokedUrlCommand*)command {
     NSLog(@"init()");
-    // not implemented
 
     self.command = command;
 
@@ -83,37 +108,49 @@
 }
 
 - (void) connect:(CDVInvokedUrlCommand*)command {
+    int i;
+    AVAudioSessionPortDescription *port;
+
     NSLog(@"connect()");
 
     CDVPluginResult * pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK];
     [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
 
-    // Respond for MIC for now.
-    [self fireConnectEvent:(NSString *)@"connected" forDevice:(NSString *)@"mic"];
+    port = self.currentRoute.outputs[0];
+
+    if([port.portType isEqualToString:AVAudioSessionPortBluetoothA2DP]) {
+        [self fireConnectEvent:(NSString *)@"connect" forDevice:(NSString *)@"bluetooth" withSubType:@"headset" withName:port.portName];
+        [self fireConnectEvent:(NSString *)@"connected" forDevice:(NSString *)@"bluetooth" withSubType:@"headset" withName:port.portName];
+    } else if([port.portType isEqualToString:AVAudioSessionPortHeadphones]) {
+        [self fireConnectEvent:(NSString *)@"connect" forDevice:(NSString *)@"wired"];
+        [self fireConnectEvent:(NSString *)@"connected" forDevice:(NSString *)@"wired"];
+    } else {
+        [self fireConnectEvent:(NSString *)@"connect" forDevice:(NSString *)@"mic"];
+        [self fireConnectEvent:(NSString *)@"connected" forDevice:(NSString *)@"mic"];
+    }
 }
 
 - (void) disconnect:(CDVInvokedUrlCommand*)command {
+    int i;
+    AVAudioSessionPortDescription *port;
+
     NSLog(@"disconnect()");
-    // not implemented
 
     CDVPluginResult * pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK];
     [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
 
-    // Respond for MIC for now.
-    [self fireConnectEvent:(NSString *)@"disconnected" forDevice:(NSString *)@"mic"];
-}
+    port = self.currentRoute.outputs[0];
 
-- (BOOL) isHeadsetEnabled {
-  AVAudioSessionRouteDescription* route = [[AVAudioSession sharedInstance] currentRoute];
-  for (AVAudioSessionPortDescription* desc in [route outputs]) {
-    if ([[desc portType] isEqualToString:AVAudioSessionPortHeadphones] ||
-        [[desc portType] isEqualToString:AVAudioSessionPortBluetoothHFP] ||
-        [[desc portType] isEqualToString:AVAudioSessionPortBluetoothA2DP] ||
-        [[desc portType] isEqualToString:AVAudioSessionPortBluetoothLE]) {
-      return YES;
+    if([port.portType isEqualToString:AVAudioSessionPortBluetoothA2DP]) {
+        [self fireConnectEvent:(NSString *)@"disconnect" forDevice:(NSString *)@"bluetooth" withSubType:@"headset" withName:port.portName];
+        [self fireConnectEvent:(NSString *)@"disconnected" forDevice:(NSString *)@"bluetooth" withSubType:@"headset" withName:port.portName];
+    } else if([port.portType isEqualToString:AVAudioSessionPortHeadphones]) {
+        [self fireConnectEvent:(NSString *)@"disconnect" forDevice:(NSString *)@"wired"];
+        [self fireConnectEvent:(NSString *)@"disconnected" forDevice:(NSString *)@"wired"];
+    } else {
+        [self fireConnectEvent:(NSString *)@"disconnect" forDevice:(NSString *)@"mic"];
+        [self fireConnectEvent:(NSString *)@"disconnected" forDevice:(NSString *)@"mic"];
     }
-  }
-  return NO;
 }
 
 -(void) fireConnectEvent:(NSString *) type forDevice:(NSString *) deviceType withSubType:(NSString *) subType withName:(NSString *) name

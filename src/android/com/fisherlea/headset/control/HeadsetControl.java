@@ -30,7 +30,7 @@ public class HeadsetControl extends CordovaPlugin {
     private static final String LOG_TAG = "HeadsetControl";
 
     private static final String ACTION_CONNECT = "connect";
-    private static final String ACTION_DETECT = "detect";
+    private static final String ACTION_GETSTATUS = "getStatus";
     private static final String ACTION_DISCONNECT = "disconnect";
     private static final String ACTION_INIT = "init";
 
@@ -148,7 +148,7 @@ public class HeadsetControl extends CordovaPlugin {
                 } else if (intent.getAction().equals(BluetoothDevice.ACTION_ACL_CONNECTED)) {
                     BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
                     Log.d(LOG_TAG, "connect from device: " + device.getName());
-                    fireConnectEvent("connect", "bluetooth", "acl", device.getName());
+                    fireConnectEvent("connected", "bluetooth", "acl", device.getName());
                 } else if (intent.getAction().equals(BluetoothDevice.ACTION_ACL_DISCONNECT_REQUESTED)) {
                     BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
                     Log.d(LOG_TAG, "disconnect requested for device: " + device.getName());
@@ -156,7 +156,7 @@ public class HeadsetControl extends CordovaPlugin {
                 } else if (intent.getAction().equals(BluetoothDevice.ACTION_ACL_DISCONNECTED)) {
                     BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
                     Log.d(LOG_TAG, "disconnect from device: " + device.getName());
-                    fireConnectEvent("disconnect", "bluetooth", "acl", device.getName());
+                    fireConnectEvent("disconnected", "bluetooth", "acl", device.getName());
                 } else if (intent.getAction().equals(BluetoothHeadset.ACTION_CONNECTION_STATE_CHANGED)) {
                     BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
                     Log.d(LOG_TAG, "headset connect change from device: " + device.getName());
@@ -199,8 +199,9 @@ public class HeadsetControl extends CordovaPlugin {
         try {
             Log.d(LOG_TAG, "execute: " + action);
 
-            if (ACTION_DETECT.equals(action)) {
-                callbackContext.sendPluginResult(new PluginResult(PluginResult.Status.OK, isHeadsetEnabled()));
+            if (ACTION_GETSTATUS.equals(action)) {
+                JSONObject status = headsetStatus();
+                callbackContext.sendPluginResult(new PluginResult(PluginResult.Status.OK, status));
                 return true;
             } else if (ACTION_CONNECT.equals(action)) {
                 if(headsetConnected) {
@@ -218,12 +219,13 @@ public class HeadsetControl extends CordovaPlugin {
                     } else {
                         callbackContext.sendPluginResult(new PluginResult(PluginResult.Status.OK));
                         // Follow up with a "connected" event.
-                        fireConnectEvent("connected", "bluetooth");
+                        fireConnectEvent("connected", "bluetooth", "sco");
                     }
                 } else {
                     // Nothing to do if no headset is connected.
                     callbackContext.sendPluginResult(new PluginResult(PluginResult.Status.OK));
-                    // Follow up with a connect event.
+                    // Follow up with connect/connected events.
+                    fireConnectEvent("connect", (wiredConnected ? "wired" : "mic"));
                     fireConnectEvent("connected", (wiredConnected ? "wired" : "mic"));
                 }
                 return true;
@@ -237,12 +239,13 @@ public class HeadsetControl extends CordovaPlugin {
                     } else {
                         callbackContext.sendPluginResult(new PluginResult(PluginResult.Status.OK));
                         // Follow up with a "disconnected" event.
-                        fireConnectEvent("disconnected", "bluetooth");
+                        fireConnectEvent("disconnected", "bluetooth", "sco");
                     }
                 } else {
                     // Nothing to do if no headset is connected.
                     callbackContext.sendPluginResult(new PluginResult(PluginResult.Status.OK));
-                    // Follow up with a disconnected event.
+                    // Follow up with disconnect/disconnected events.
+                    fireConnectEvent("disconnect", (wiredConnected ? "wired" : "mic"));
                     fireConnectEvent("disconnected", (wiredConnected ? "wired" : "mic"));
                 }
 
@@ -258,7 +261,8 @@ public class HeadsetControl extends CordovaPlugin {
 
                 return true;
             } else {
-                callbackContext.error(action + " is not a supported function. Did you mean '" + ACTION_DETECT + "'?");
+                Log.w(LOG_TAG, "\"" + action + "\" is not a supported function.");
+                callbackContext.error("\"" + action + "\" is not a supported function.");
                 return false;
             }
         } catch (Exception e) {
@@ -277,58 +281,95 @@ public class HeadsetControl extends CordovaPlugin {
         }
     }
 
-    private boolean isHeadsetEnabled() {
+    private JSONObject headsetStatus() {
+        int sources = 0;
+        int sinks = 0;
+        String type;
+        boolean bluetooth = false;
         boolean headset = false;
 
         Log.d(LOG_TAG, "AudioManager mode: " + audioManager.getMode());
 
         AudioDeviceInfo devices[] = audioManager.getDevices(AudioManager.GET_DEVICES_ALL);
-        Log.d(LOG_TAG, "Num devices: " + devices.length);
+
         for(int i = 0; i < devices.length; i++) {
-            Log.d(LOG_TAG, " product name: " + devices[i].getProductName() + (devices[i].isSource() ? " (Source)" : " (Sink)"));
-            switch(devices[i].getType()) {
+            AudioDeviceInfo device = devices[i];
+
+            if(device.isSource()) {
+                sources++;
+            } else {
+                sinks++;
+            }
+
+            switch(device.getType()) {
                 case AudioDeviceInfo.TYPE_BLUETOOTH_SCO:
-                    Log.d(LOG_TAG, "         type: SCO");
+                    type = "SCO";
+                    bluetooth = true;
                     headset = true;
                     break;
 
                 case AudioDeviceInfo.TYPE_BLUETOOTH_A2DP:
-                    Log.d(LOG_TAG, "         type: A2DP");
+                    type = "A2DP";
+                    bluetooth = true;
                     headset = true;
                     break;
 
                 case AudioDeviceInfo.TYPE_BUILTIN_EARPIECE:
-                    Log.d(LOG_TAG, "         type: Builtin ear-piece");
+                    type = "Builtin ear-piece";
                     break;
 
                 case AudioDeviceInfo.TYPE_BUILTIN_SPEAKER:
-                    Log.d(LOG_TAG, "         type: Builtin speaker");
+                    type = "Builtin speaker";
                     break;
 
                 case AudioDeviceInfo.TYPE_BUILTIN_MIC:
-                    Log.d(LOG_TAG, "         type: Builtin MIC");
+                    type = "Builtin MIC";
                     break;
 
                 case AudioDeviceInfo.TYPE_TELEPHONY:
-                    Log.d(LOG_TAG, "         type: Telephony");
+                    type = "Telephony";
                     break;
 
                 case AudioDeviceInfo.TYPE_WIRED_HEADSET:
-                    Log.d(LOG_TAG, "         type: Wired Headset");
+                    type = "Wired Headset";
                     headset = true;
                     break;
 
                 case AudioDeviceInfo.TYPE_WIRED_HEADPHONES:
-                    Log.d(LOG_TAG, "         type: Wired Headphones");
+                    type = "Wired Headphones";
+                    headset = true;
                     break;
 
                 default:
-                    Log.d(LOG_TAG, "         type: " + devices[i].getType());
+                    type = "Unknown " + device.getType();
                     break;
             }
+
+            Log.d(LOG_TAG, (device.isSource() ? : "source" : "  sink") + " name: " + device.getProductName() + " type: " + type);
         }
 
-        return headset;
+        JSONObject status = new JSONObject();
+
+        try {
+            status.put("bluetooth", bluetooth);
+            status.put("headset", headset);
+            status.put("sources", sources);
+            status.put("sinks", sinks);
+
+            if(headset) {
+                if(bluetooth) {
+                    status.put("connected", headsetConnected);
+                } else {
+                    status.put("connected", wiredConnected);
+                }
+            } else {
+                status.put("connected", false);
+            }
+        } catch (JSONException e) {
+            // this will never happen
+        }
+
+        return status;
     }
 
     public void onDestroy() {
