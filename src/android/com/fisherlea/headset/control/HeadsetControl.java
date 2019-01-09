@@ -295,11 +295,11 @@ public class HeadsetControl extends CordovaPlugin {
     private void handleSCODisconnect() {
         Log.d(LOG_TAG, "handleSCODisconnect()");
         if(scoStarted) {
-            Log.d(LOG_TAG, "revert audio manager to normal");
             audioManager.setBluetoothScoOn(false);
-            audioManager.setMode(AudioManager.MODE_NORMAL);
             scoStarted = false;
         }
+        Log.d(LOG_TAG, "revert audio manager to normal");
+        audioManager.setMode(AudioManager.MODE_NORMAL);
     }
 
     private JSONObject headsetStatus() {
