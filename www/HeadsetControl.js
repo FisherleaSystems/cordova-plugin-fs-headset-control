@@ -48,6 +48,11 @@ function HeadsetControl() {
      */
     this.onerror = null;
 
+    /** Connect timer.
+     * @private
+     */
+    this._connectTimer = null;
+
     this._init();
 }
 
@@ -114,10 +119,25 @@ HeadsetControl.prototype._init = function () {
 
 /**
  * Connect to the headset. Preference is given to Bluetooth devices.
+ * @param {number} [duration=0] The amount of time that the connection should be maintained, in seconds.
+ *      A value of 0 indicates that the connection should be maintained until an explicit {@link #disconnect} call is made.
  * @param {function} [success] The success callback.
  * @param {function} [failure] The failure callback.
  */
-HeadsetControl.prototype.connect = function (success, failure) {
+HeadsetControl.prototype.connect = function (duration, success, failure) {
+    var that = this;
+
+    if (this._connectTimer) {
+        clearTimeout(this._connectTimer);
+    }
+
+    if (duration) {
+        setTimeout(function () {
+            that.disconnect();
+            that._connectTimer = null;
+        }, duration * 1000);
+    }
+
     exec(success, failure, "HeadsetControl", "connect", []);
 };
 
