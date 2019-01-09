@@ -137,7 +137,7 @@ HeadsetControl.prototype.connect = function (duration, success, failure) {
     }
 
     if (duration) {
-        setTimeout(function () {
+        this._connectTimer = setTimeout(function () {
             that.disconnect();
             that._connectTimer = null;
         }, duration * 1000);
