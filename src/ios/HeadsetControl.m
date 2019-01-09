@@ -119,6 +119,7 @@
     port = self.currentRoute.outputs[0];
 
     if([port.portType isEqualToString:AVAudioSessionPortBluetoothA2DP]) {
+        [self fireConnectEvent:(NSString *)@"connect" forDevice:(NSString *)@"bluetooth" withSubType:@"sco" withName:port.portName];
         [self fireConnectEvent:(NSString *)@"connected" forDevice:(NSString *)@"bluetooth" withSubType:@"headset" withName:port.portName];
         [self fireConnectEvent:(NSString *)@"connected" forDevice:(NSString *)@"bluetooth" withSubType:@"sco" withName:port.portName];
     } else if([port.portType isEqualToString:AVAudioSessionPortHeadphones]) {
@@ -142,6 +143,7 @@
     port = self.currentRoute.outputs[0];
 
     if([port.portType isEqualToString:AVAudioSessionPortBluetoothA2DP]) {
+        [self fireConnectEvent:(NSString *)@"disconnect" forDevice:(NSString *)@"bluetooth" withSubType:@"sco" withName:port.portName];
         [self fireConnectEvent:(NSString *)@"disconnected" forDevice:(NSString *)@"bluetooth" withSubType:@"sco" withName:port.portName];
         [self fireConnectEvent:(NSString *)@"disconnected" forDevice:(NSString *)@"bluetooth" withSubType:@"headset" withName:port.portName];
     } else if([port.portType isEqualToString:AVAudioSessionPortHeadphones]) {

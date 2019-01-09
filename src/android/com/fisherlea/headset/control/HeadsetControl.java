@@ -106,13 +106,11 @@ public class HeadsetControl extends CordovaPlugin {
                         case 0:
                             Log.d(LOG_TAG, "Wired headset was unplugged");
                             wiredConnected = false;
-                            fireConnectEvent("disconnect", "wired");
                             fireConnectEvent("disconnected", "wired");
                             break;
                         case 1:
                             Log.d(LOG_TAG, "Wired headset was plugged in");
                             wiredConnected = true;
-                            fireConnectEvent("connect", "wired");
                             fireConnectEvent("connected", "wired");
                             break;
                         default:
@@ -125,7 +123,7 @@ public class HeadsetControl extends CordovaPlugin {
                         case AudioManager.SCO_AUDIO_STATE_DISCONNECTED:
                             Log.d(LOG_TAG, "SCO headset is disconnected");
                             if(scoConnected) {
-                                fireConnectEvent("disconnect", "bluetooth", "sco");
+                                fireConnectEvent("disconnecting", "bluetooth", "sco");
                             }
 
                             handleSCODisconnect();
@@ -134,7 +132,6 @@ public class HeadsetControl extends CordovaPlugin {
                             break;
                         case AudioManager.SCO_AUDIO_STATE_CONNECTED:
                             Log.d(LOG_TAG, "SCO headset is connected");
-                            fireConnectEvent("connect", "bluetooth", "sco");
                             fireConnectEvent("connected", "bluetooth", "sco");
                             scoConnected = true;
                             break;
@@ -205,6 +202,7 @@ public class HeadsetControl extends CordovaPlugin {
                 return true;
             } else if (ACTION_CONNECT.equals(action)) {
                 if(headsetConnected) {
+                    fireConnectEvent("connect", "bluetooth", "sco");
                     if (!scoStarted) {
                         Log.d(LOG_TAG, "setMode(AudioManager.MODE_IN_COMMUNICATION)");
                         audioManager.setMode(AudioManager.MODE_IN_COMMUNICATION);
@@ -231,6 +229,7 @@ public class HeadsetControl extends CordovaPlugin {
                 return true;
             } else if (ACTION_DISCONNECT.equals(action)) {
                 if(headsetConnected) {
+                    fireConnectEvent("disconnect", "bluetooth", "sco");
                     if (scoStarted) {
                         Log.d(LOG_TAG, "audioManager.stopBluetoothSco()");
                         audioManager.stopBluetoothSco();
