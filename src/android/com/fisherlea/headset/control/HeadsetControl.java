@@ -1,5 +1,7 @@
 package com.fisherlea.headset.control;
 
+import java.util.List;
+
 import org.apache.cordova.CallbackContext;
 import org.apache.cordova.CordovaPlugin;
 import org.apache.cordova.PluginResult;
@@ -42,6 +44,7 @@ public class HeadsetControl extends CordovaPlugin {
     private BluetoothManager bluetoothManager;
     private BluetoothAdapter bluetoothAdapter;
     private BluetoothHeadset bluetoothHeadset;
+    private BluetoothDevice bluetoothDevice;
     private CallbackContext initCallbackContext;
 
     protected static CordovaWebView mCachedWebView = null;
@@ -54,6 +57,7 @@ public class HeadsetControl extends CordovaPlugin {
         this.receiver = null;
         this.serviceListener = null;
         this.bluetoothHeadset = null;
+        this.bluetoothDevice = null;
         this.initCallbackContext = null;
     }
 
@@ -72,10 +76,19 @@ public class HeadsetControl extends CordovaPlugin {
             public void onServiceConnected(int profile, BluetoothProfile proxy) {
                 Log.d(LOG_TAG, "BluetoothProfile.ServiceListener().onServiceConnected(" + profile +")");
                 bluetoothHeadset = (BluetoothHeadset) proxy;
+
+                List<BluetoothDevice> devices = bluetoothHeadset.getConnectedDevices();
+                if(! devices.isEmpty()) {
+                    headsetConnected = true;
+
+                    bluetoothDevice = devices.get(0);
+                }
             };
             public void onServiceDisconnected(int profile) {
                 Log.d(LOG_TAG, "BluetoothProfile.ServiceListener().onServiceDisconnected(" + profile +")");
                 bluetoothHeadset = null;
+                bluetoothDevice = null;
+                headsetConnected = false;
             };
         };
 
@@ -163,6 +176,7 @@ public class HeadsetControl extends CordovaPlugin {
                             Log.d(LOG_TAG, "BT headset is disconnected");
                             fireConnectEvent("disconnected", "bluetooth", "headset", device.getName());
                             headsetConnected = false;
+                            bluetoothDevice = null;
                             break;
                         case BluetoothHeadset.STATE_DISCONNECTING:
                             Log.d(LOG_TAG, "BT headset is disconnecting");
@@ -175,6 +189,7 @@ public class HeadsetControl extends CordovaPlugin {
                             break;
                         case BluetoothHeadset.STATE_CONNECTED:
                             headsetConnected = true;
+                            bluetoothDevice = device;
                             Log.d(LOG_TAG, "BT headset is connected");
                             fireConnectEvent("connected", "bluetooth", "headset", device.getName());
                             break;
@@ -258,6 +273,13 @@ public class HeadsetControl extends CordovaPlugin {
                 pluginResult.setKeepCallback(true);
                 callbackContext.sendPluginResult(pluginResult);
 
+                if(headsetConnected) {
+                    if(bluetoothDevice != null) {
+                        fireConnectEvent("connected", "bluetooth", "headset", bluetoothDevice.getName());
+                    } else {
+                        fireConnectEvent("connected", "bluetooth", "headset");
+                    }
+                }
                 return true;
             } else {
                 Log.w(LOG_TAG, "\"" + action + "\" is not a supported function.");
