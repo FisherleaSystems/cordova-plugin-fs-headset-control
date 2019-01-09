@@ -99,7 +99,12 @@ HeadsetControl.prototype._init = function () {
                 break;
 
             case "disconnect":
-                if(typeof that.ondisconnect === "function") {
+                if (that._connectTimer) {
+                    clearTimeout(that._connectTimer);
+                    that._connectTimer = null;
+                }
+
+                if (typeof that.ondisconnect === "function") {
                     that.ondisconnect(event);
                 }
                 break;
@@ -156,6 +161,11 @@ HeadsetControl.prototype.getStatus = function (success, failure) {
  * @param {function} [failure] The failure callback.
  */
 HeadsetControl.prototype.disconnect = function (success, failure) {
+    if (this._connectTimer) {
+        clearTimeout(this._connectTimer);
+        this._connectTimer = null;
+    }
+
     exec(success, failure, "HeadsetControl", "disconnect", []);
 };
 
