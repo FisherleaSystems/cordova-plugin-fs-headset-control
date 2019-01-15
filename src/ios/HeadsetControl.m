@@ -87,13 +87,13 @@
     }
 
     NSMutableDictionary * status = [[NSMutableDictionary alloc]init];
-    [status setValue:bluetooth forKey:@"bluetooth"];
-    [status setValue:headset forKey:@"headset"];
-    [status setValue:route.inputs.count forKey:@"sources"];
-    [status setValue:route.outputs.count forKey:@"sinks"];
-    [status setValue:YES forKey:@"connected"];
+    [status setValue:@(bluetooth) forKey:@"bluetooth"];
+    [status setValue:@(headset) forKey:@"headset"];
+    [status setValue:@(self.currentRoute.inputs.count) forKey:@"sources"];
+    [status setValue:@(self.currentRoute.outputs.count) forKey:@"sinks"];
+    [status setValue:@YES forKey:@"connected"];
 
-    CDVPluginResult * pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsDictionary:event];
+    CDVPluginResult * pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsDictionary:status];
     [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
 }
 
@@ -108,7 +108,6 @@
 }
 
 - (void) connect:(CDVInvokedUrlCommand*)command {
-    int i;
     AVAudioSessionPortDescription *port;
 
     NSLog(@"connect()");
@@ -132,7 +131,6 @@
 }
 
 - (void) disconnect:(CDVInvokedUrlCommand*)command {
-    int i;
     AVAudioSessionPortDescription *port;
 
     NSLog(@"disconnect()");
