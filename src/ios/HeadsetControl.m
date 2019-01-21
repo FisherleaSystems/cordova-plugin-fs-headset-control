@@ -1,5 +1,15 @@
 #import "HeadsetControl.h"
 
+#if 0
+#define DBG(a)          NSLog(a)
+#define DBG1(a, b)      NSLog(a, b)
+#define DBG2(a, b, c)   NSLog(a, b, c)
+#else
+#define DBG(a)
+#define DBG1(a, b)
+#define DBG2(a, b, c)
+#endif
+
 @implementation HeadsetControl
 
 - (void) pluginInitialize {
@@ -23,13 +33,12 @@
                                  error:&error]) {
         NSLog(@"[hc] Unable to setCategory: %@", error);
     }
-    NSLog(@"[hc] AVAudioSession categoryOptions - %d", (int) self.audioSession.categoryOptions);
 }
 
 - (void)routeChanged:(NSNotification *)notification {
     NSNumber *reason = [notification.userInfo objectForKey:AVAudioSessionRouteChangeReasonKey];
 
-    NSLog(@"[hc] routeChanged");
+    DBG(@"[hc] routeChanged");
 
     AVAudioSessionRouteDescription *route;
     NSArray<AVAudioSessionPortDescription *> *ports;
@@ -44,11 +53,13 @@
         route = [notification.userInfo objectForKey:AVAudioSessionRouteChangePreviousRouteKey];
     } else if ([reason unsignedIntegerValue] == AVAudioSessionRouteChangeReasonCategoryChange) {
         NSLog(@"[hc] AVAudioSessionRouteChangeReasonCategoryChange");
-        NSLog(@"[hc] AVAudioSession category: %@, categoryOptions = %d", [self.audioSession category], (int) self.audioSession.categoryOptions);
+        NSLog(@"[hc] AVAudioSession category: %@, categoryOptions = %d",
+              [self.audioSession category], (int) self.audioSession.categoryOptions);
     } else {
         NSLog(@"[hc] Unknown reason: %u", (unsigned)[reason unsignedIntegerValue]);
     }
-    NSLog(@"[hc] AVAudioSession sampleRate: %lf, preferredSampleRate: %lf", [self.audioSession sampleRate], [self.audioSession preferredSampleRate]);
+    DBG2(@"[hc] AVAudioSession sampleRate: %lf, preferredSampleRate: %lf",
+         [self.audioSession sampleRate], [self.audioSession preferredSampleRate]);
 
 #if 0
     int i;
@@ -245,7 +256,7 @@
     AVAudioSession *audioSession = [AVAudioSession sharedInstance];
     AVAudioSessionRouteDescription *route;
 
-    NSLog(@"[hc] connect()");
+    DBG(@"[hc] connect()");
 
     CDVPluginResult * pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK];
     [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
@@ -281,7 +292,7 @@
     AVAudioSession *audioSession = [AVAudioSession sharedInstance];
     AVAudioSessionRouteDescription *route;
 
-    NSLog(@"[hc] disconnect()");
+    DBG(@"[hc] disconnect()");
 
     CDVPluginResult * pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK];
     [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
@@ -317,12 +328,7 @@
     NSMutableDictionary * event = [[NSMutableDictionary alloc]init];
     [event setValue:type forKey:@"type"];
 
-    NSLog(@"[hc] fireConnectEvent(): type: %@", type);
-
-    if(deviceType != NULL) {
-        [event setValue:deviceType forKey:@"device"];
-        NSLog(@"[hc]                     device: %@", deviceType);
-    }
+    NSLog(@"[hc] fireConnectEvent(): type: %@, device: %@", type, deviceType);
 
     if(subType != NULL) {
         [event setValue:subType forKey:@"subType"];
