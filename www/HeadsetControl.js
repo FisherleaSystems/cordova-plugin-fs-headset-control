@@ -64,6 +64,10 @@ HeadsetControl.prototype._init = function () {
     var that = this;
 
     exec(function(event) {
+        if (typeof event !== "object") {
+            console.warn("HeadsetControl._init() event = " + JSON.stringify(event));
+            return;
+        }
         if (typeof that.onevent === "function") {
             that.onevent(event);
         }
