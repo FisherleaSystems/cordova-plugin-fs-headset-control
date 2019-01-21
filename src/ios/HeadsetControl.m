@@ -61,9 +61,7 @@
     DBG2(@"[hc] AVAudioSession sampleRate: %lf, preferredSampleRate: %lf",
          [self.audioSession sampleRate], [self.audioSession preferredSampleRate]);
 
-#if 0
-    logRouteInformation(route);
-#endif
+    [self logRouteInformation:route];
 
     if ([reason unsignedIntegerValue] == AVAudioSessionRouteChangeReasonNewDeviceAvailable) {
         ports = route.outputs;
@@ -139,7 +137,7 @@
     NSLog(@"[hc] AVAudioSession sampleRate: %lf, preferredSampleRate: %lf",
           [self.audioSession sampleRate], [self.audioSession preferredSampleRate]);
 
-    for (port in [audioSession availableInputs]) {
+    for (port in [self.audioSession availableInputs]) {
         if ([[port portType] isEqualToString:AVAudioSessionPortHeadphones]) {
             headset = YES;
         } else if([[port portType] isEqualToString:AVAudioSessionPortBluetoothHFP]) {
@@ -154,7 +152,7 @@
         }
     }
 
-    route = [audioSession currentRoute];
+    route = [self.audioSession currentRoute];
     port = route.inputs[0];
     if(bluetooth) {
         if(headset) {
@@ -167,14 +165,12 @@
         connected = YES;
     }
 
-#if 0
-    logRouteInformation(route);
-#endif
+    [self logRouteInformation:route];
 
     NSMutableDictionary * status = [[NSMutableDictionary alloc]init];
     [status setValue:@(bluetooth) forKey:@"bluetooth"];
     [status setValue:@(headset) forKey:@"headset"];
-    [status setValue:@(audioSession.availableInputs.count) forKey:@"sources"];
+    [status setValue:@(self.audioSession.availableInputs.count) forKey:@"sources"];
     [status setValue:@(route.outputs.count) forKey:@"sinks"];
     [status setValue:@(connected) forKey:@"connected"];
 
@@ -298,14 +294,14 @@
 {
     int i;
     NSArray<AVAudioSessionPortDescription *> *ports;
+    AVAudioSessionPortDescription *port;
+
     ports = route.inputs;
 
     for(i = 0; i < ports.count; i++) {
         port = ports[i];
 
-        NSLog(@"[hc] input %d: description: %@", i, port.description);
-        //NSLog(@"[hc]                  name: %@", port.portName);
-        //NSLog(@"[hc]                  type: %@", port.portType);
+        NSLog(@"[hc]  input %d - type: %@, name %@", i, port.portType, port.portName);
     }
 
     ports = route.outputs;
@@ -313,9 +309,7 @@
     for(i = 0; i < ports.count; i++) {
         port = ports[i];
 
-        NSLog(@"[hc] output %d: description: %@", i, port.description);
-        //NSLog(@"[hc]                   name: %@", port.portName);
-        //NSLog(@"[hc]                   type: %@", port.portType);
+        NSLog(@"[hc] output %d - type: %@, name %@", i, port.portType, port.portName);
     }
 
     ports = [self.audioSession availableInputs];
@@ -323,9 +317,7 @@
     for(i = 0; i < ports.count; i++) {
         port = ports[i];
 
-        NSLog(@"[hc] avail %d: description: %@", i, port.description);
-        //NSLog(@"[hc]                  name: %@", port.portName);
-        //NSLog(@"[hc]                  type: %@", port.portType);
+        NSLog(@"[hc]  avail %d - type: %@, name %@", i, port.portType, port.portName);
     }
 }
 
