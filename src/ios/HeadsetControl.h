@@ -3,11 +3,10 @@
 
 @interface HeadsetControl:CDVPlugin
 
-@property (nonatomic, readwrite) BOOL micConnected;
-@property (nonatomic, readwrite) BOOL headphonesConnected;
-@property (nonatomic, readwrite) BOOL headsetConnected;
 @property (nonatomic, readwrite) BOOL scoConnected;
 @property (nonatomic, readwrite) BOOL a2dpConnected;
+@property (nonatomic, readwrite) BOOL isConnected;
+@property (nonatomic, strong) AVAudioSessionPortDescription *currentDevice;
 @property (nonatomic, strong) AVAudioSession *audioSession;
 @property (nonatomic, strong) CDVInvokedUrlCommand * command;
 @property (nonatomic, strong) CDVPluginResult* pluginResult;
