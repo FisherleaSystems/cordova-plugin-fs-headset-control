@@ -62,36 +62,7 @@
          [self.audioSession sampleRate], [self.audioSession preferredSampleRate]);
 
 #if 0
-    int i;
-    ports = route.inputs;
-
-    for(i = 0; i < ports.count; i++) {
-        port = ports[i];
-
-        NSLog(@"[hc] input %d: description: %@", i, port.description);
-        //NSLog(@"[hc]                  name: %@", port.portName);
-        //NSLog(@"[hc]                  type: %@", port.portType);
-    }
-
-    ports = route.outputs;
-
-    for(i = 0; i < ports.count; i++) {
-        port = ports[i];
-
-        NSLog(@"[hc] output %d: description: %@", i, port.description);
-        //NSLog(@"[hc]                   name: %@", port.portName);
-        //NSLog(@"[hc]                   type: %@", port.portType);
-    }
-
-    ports = [self.audioSession availableInputs];
-
-    for(i = 0; i < ports.count; i++) {
-        port = ports[i];
-
-        NSLog(@"[hc] avail %d: description: %@", i, port.description);
-        //NSLog(@"[hc]                  name: %@", port.portName);
-        //NSLog(@"[hc]                  type: %@", port.portType);
-    }
+    logRouteInformation(route);
 #endif
 
     if ([reason unsignedIntegerValue] == AVAudioSessionRouteChangeReasonNewDeviceAvailable) {
@@ -158,7 +129,6 @@
 }
 
 - (void) getStatus:(CDVInvokedUrlCommand*)command {
-    AVAudioSession *audioSession = [AVAudioSession sharedInstance];
     AVAudioSessionRouteDescription *route;
     AVAudioSessionPortDescription *port;
     BOOL bluetooth = NO;
@@ -166,7 +136,8 @@
     BOOL connected = NO;
 
     NSLog(@"[hc] getStatus()");
-    NSLog(@"[hc] AVAudioSession sampleRate: %lf, preferredSampleRate: %lf", [self.audioSession sampleRate], [self.audioSession preferredSampleRate]);
+    NSLog(@"[hc] AVAudioSession sampleRate: %lf, preferredSampleRate: %lf",
+          [self.audioSession sampleRate], [self.audioSession preferredSampleRate]);
 
     for (port in [audioSession availableInputs]) {
         if ([[port portType] isEqualToString:AVAudioSessionPortHeadphones]) {
@@ -197,37 +168,7 @@
     }
 
 #if 0
-    int i;
-    NSArray<AVAudioSessionPortDescription *> *ports;
-    ports = route.inputs;
-
-    for(i = 0; i < ports.count; i++) {
-        port = ports[i];
-
-        NSLog(@"[hc] input %d: description: %@", i, port.description);
-        //NSLog(@"[hc]                  name: %@", port.portName);
-        //NSLog(@"[hc]                  type: %@", port.portType);
-    }
-
-    ports = route.outputs;
-
-    for(i = 0; i < ports.count; i++) {
-        port = ports[i];
-
-        NSLog(@"[hc] output %d: description: %@", i, port.description);
-        //NSLog(@"[hc]                   name: %@", port.portName);
-        //NSLog(@"[hc]                   type: %@", port.portType);
-    }
-
-    ports = [audioSession availableInputs];
-
-    for(i = 0; i < ports.count; i++) {
-        port = ports[i];
-
-        NSLog(@"[hc] avail %d: description: %@", i, port.description);
-        //NSLog(@"[hc]                  name: %@", port.portName);
-        //NSLog(@"[hc]                  type: %@", port.portType);
-    }
+    logRouteInformation(route);
 #endif
 
     NSMutableDictionary * status = [[NSMutableDictionary alloc]init];
@@ -253,7 +194,6 @@
 
 - (void) connect:(CDVInvokedUrlCommand*)command {
     AVAudioSessionPortDescription *port;
-    AVAudioSession *audioSession = [AVAudioSession sharedInstance];
     AVAudioSessionRouteDescription *route;
 
     DBG(@"[hc] connect()");
@@ -261,7 +201,7 @@
     CDVPluginResult * pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK];
     [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
 
-    route = [audioSession currentRoute];
+    route = [self.audioSession currentRoute];
     port = route.inputs[0];
 
     if([port.portType isEqualToString:AVAudioSessionPortBluetoothHFP]) {
@@ -289,7 +229,6 @@
 
 - (void) disconnect:(CDVInvokedUrlCommand*)command {
     AVAudioSessionPortDescription *port;
-    AVAudioSession *audioSession = [AVAudioSession sharedInstance];
     AVAudioSessionRouteDescription *route;
 
     DBG(@"[hc] disconnect()");
@@ -297,7 +236,7 @@
     CDVPluginResult * pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK];
     [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
 
-    route = [audioSession currentRoute];
+    route = [self.audioSession currentRoute];
     port = route.inputs[0];
 
     if([port.portType isEqualToString:AVAudioSessionPortBluetoothHFP]) {
@@ -353,6 +292,41 @@
 -(void) fireConnectEvent:(NSString *) type forDevice:(NSString *) deviceType
 {
     [self fireConnectEvent:type forDevice:deviceType withSubType:NULL withName:NULL];
+}
+
+-(void) logRouteInformation:(AVAudioSessionRouteDescription *) route
+{
+    int i;
+    NSArray<AVAudioSessionPortDescription *> *ports;
+    ports = route.inputs;
+
+    for(i = 0; i < ports.count; i++) {
+        port = ports[i];
+
+        NSLog(@"[hc] input %d: description: %@", i, port.description);
+        //NSLog(@"[hc]                  name: %@", port.portName);
+        //NSLog(@"[hc]                  type: %@", port.portType);
+    }
+
+    ports = route.outputs;
+
+    for(i = 0; i < ports.count; i++) {
+        port = ports[i];
+
+        NSLog(@"[hc] output %d: description: %@", i, port.description);
+        //NSLog(@"[hc]                   name: %@", port.portName);
+        //NSLog(@"[hc]                   type: %@", port.portType);
+    }
+
+    ports = [self.audioSession availableInputs];
+
+    for(i = 0; i < ports.count; i++) {
+        port = ports[i];
+
+        NSLog(@"[hc] avail %d: description: %@", i, port.description);
+        //NSLog(@"[hc]                  name: %@", port.portName);
+        //NSLog(@"[hc]                  type: %@", port.portType);
+    }
 }
 
 @end
