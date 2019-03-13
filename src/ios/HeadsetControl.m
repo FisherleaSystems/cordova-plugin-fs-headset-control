@@ -24,6 +24,8 @@
 
     self.audioSession = [AVAudioSession sharedInstance];
 
+    NSLog(@"[hc] AVAudioSession category: %@, categoryOptions = %d",
+          [self.audioSession category], (int) self.audioSession.categoryOptions);
     NSLog(@"[hc] setCategory to PlayAndRecord and enable Bluetooth.");
     // Play and record is needed for access to bluetooth headsets.
     // See https://developer.apple.com/documentation/avfoundation/avaudiosessioncategoryoptions/avaudiosessioncategoryoptionallowbluetooth
