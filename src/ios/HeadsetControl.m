@@ -16,6 +16,7 @@
     NSError *error;
     AVAudioSessionRouteDescription *route;
     
+    self.currentDevice = nil;
     self.a2dpConnected = NO;
     self.scoConnected = NO;
     self.isConnected = NO;
@@ -36,11 +37,15 @@
     }
 
     route = self.audioSession.currentRoute;
-    self.currentDevice = route.inputs[0];
-    
-    if([self.currentDevice.portType isEqualToString:AVAudioSessionPortHeadphones] ||
-       [self.currentDevice.portType isEqualToString:AVAudioSessionPortBuiltInMic]) {
-        self.isConnected = YES;
+    if(route && route.inputs) {
+        self.currentDevice = route.inputs[0];
+
+        if(self.currentDevice) {
+            if([self.currentDevice.portType isEqualToString:AVAudioSessionPortHeadphones] ||
+               [self.currentDevice.portType isEqualToString:AVAudioSessionPortBuiltInMic]) {
+                self.isConnected = YES;
+            }
+        }
     }
 }
 
@@ -64,7 +69,8 @@
         NSLog(@"[hc] AVAudioSession category: %@, categoryOptions = %d",
               [self.audioSession category], (int) self.audioSession.categoryOptions);
 
-        if(![self.currentDevice.portType isEqualToString:self.audioSession.currentRoute.inputs[0].portType]) {
+        if(!self.currentDevice ||
+           ![self.currentDevice.portType isEqualToString:self.audioSession.currentRoute.inputs[0].portType]) {
             NSLog(@"[hc] input port has changed. Performing route change.");
             [self connectToDevice:self.audioSession.currentRoute.inputs[0] isRouteChange:YES fireConnectEvents:NO];
         }
@@ -189,6 +195,9 @@
 {
     AVAudioSessionPortDescription *port;
     port = [self currentDevice];
+    if(!port) {
+        return;
+    }
 
     DBG1(@"[hc] disconnectFromCurrentDevice: %@", port.portType);
     
