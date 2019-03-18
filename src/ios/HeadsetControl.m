@@ -37,7 +37,7 @@
     }
 
     route = self.audioSession.currentRoute;
-    if(route && route.inputs) {
+    @try {
         self.currentDevice = route.inputs[0];
 
         if(self.currentDevice) {
@@ -46,6 +46,14 @@
                 self.isConnected = YES;
             }
         }
+    }
+    @catch(NSException *exception) {
+        // This only seems to fail during Apple's review testing.
+        // Likely something related to their test harness.
+        // The issue is that an exception occurs dereferencing route.inputs.
+        // We don't need that info yet, so can wait to get it later.
+        self.currentDevice = nil;
+        NSLog(@"[hc] Unable to determine the current device.");
     }
 }
 
@@ -120,10 +128,36 @@
 }
 
 - (void) init:(CDVInvokedUrlCommand*)command {
+    AVAudioSessionRouteDescription *route;
+
     DBG(@"[hc] init()");
 
     self.command = command;
 
+    // Try to get the currentDevice if we don't have it yet.
+    if(!self.currentDevice) {
+        route = self.audioSession.currentRoute;
+        @try {
+            self.currentDevice = route.inputs[0];
+            
+            if(self.currentDevice) {
+                if([self.currentDevice.portType isEqualToString:AVAudioSessionPortHeadphones] ||
+                   [self.currentDevice.portType isEqualToString:AVAudioSessionPortBuiltInMic]) {
+                    self.isConnected = YES;
+                }
+            }
+        }
+        @catch(NSException *exception) {
+            // This only seems to fail during Apple's review testing. (In pluginInitialize)
+            // Likely something related to their test harness.
+            // The issue is that an exception occurs dereferencing route.inputs.
+            // We don't need that info yet, so can wait to get it later.
+            self.currentDevice = nil;
+            NSLog(@"[hc] Unable to determine current device.");
+        }
+    }
+
+    
     CDVPluginResult * pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK];
     [pluginResult setKeepCallbackAsBool:YES];
     [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
