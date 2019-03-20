@@ -2,7 +2,7 @@
 <plugin xmlns="http://apache.org/cordova/ns/plugins/1.0"
         xmlns:android="http://schemas.android.com/apk/res/android"
         id="cordova-plugin-fs-headset-control"
-        version="0.1.0">
+        version="0.1.1">
 
   <name>Headset Control</name>
 
@@ -30,8 +30,6 @@
 
   <!-- android -->
   <platform name="android">
-    <!-- preference name="android-minSdkVersion" value="23" / -->
-
     <config-file target="res/xml/config.xml" parent="/*">
       <feature name="HeadsetControl">
         <param name="android-package" value="com.fisherlea.headset.control.HeadsetControl" />
@@ -44,7 +42,7 @@
       <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     </config-file>
 
-    <source-file src="src/android/com/fisherlea/headset/control/HeadsetControl.java" target-dir="src/com/fisherlea/headset/control"/>
+    <source-file src="src/android/HeadsetControl.java" target-dir="src/com/fisherlea/headset/control"/>
   </platform>
 
   <js-module src="www/HeadsetControl.js" name="HeadsetControl">

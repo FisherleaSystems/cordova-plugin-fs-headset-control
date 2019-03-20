@@ -1,3 +1,12 @@
+/*! ********************************************************************
+ *
+ * Copyright (c) 2018-2019, Fisherlea Systems
+ *
+ * This software contains proprietary information that is the property
+ * of Fisherlea Systems. All Rights Reserved.
+ *
+ ***********************************************************************/
+
 var exec = require('cordova/exec');
 
 /** 
@@ -64,13 +73,14 @@ HeadsetControl.prototype._init = function () {
     var that = this;
 
     exec(function(event) {
-        if (typeof event !== "object") {
-            console.warn("HeadsetControl._init() event = " + JSON.stringify(event));
+        if (typeof event !== "object" || event.type == "init") {
             return;
         }
+
         if (typeof that.onevent === "function") {
             that.onevent(event);
         }
+
         switch (event.type) {
             case "connected":
                 if(typeof that.onconnected === "function") {

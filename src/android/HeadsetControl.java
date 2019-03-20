@@ -1,3 +1,12 @@
+/*! ********************************************************************
+ *
+ * Copyright (c) 2018-2019, Fisherlea Systems
+ *
+ * This software contains proprietary information that is the property
+ * of Fisherlea Systems. All Rights Reserved.
+ *
+ ***********************************************************************/
+
 package com.fisherlea.headset.control;
 
 import java.util.List;
@@ -268,7 +277,14 @@ public class HeadsetControl extends CordovaPlugin {
                 // Keep the init callback context to allow events to be sent.
                 initCallbackContext = callbackContext;
 
-                PluginResult pluginResult = new PluginResult(PluginResult.Status.OK);
+                JSONObject event = new JSONObject();
+                try {
+                    event.put("type", "init");
+                } catch (JSONException e) {
+                    // this will never happen
+                }
+
+                PluginResult pluginResult = new PluginResult(PluginResult.Status.OK, event);
                 // Keep the callback around for later use.
                 pluginResult.setKeepCallback(true);
                 callbackContext.sendPluginResult(pluginResult);

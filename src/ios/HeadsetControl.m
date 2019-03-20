@@ -1,3 +1,12 @@
+/*! ********************************************************************
+ *
+ * Copyright (c) 2018-2019, Fisherlea Systems
+ *
+ * This software contains proprietary information that is the property
+ * of Fisherlea Systems. All Rights Reserved.
+ *
+ ***********************************************************************/
+
 #import "HeadsetControl.h"
 
 #if 0
@@ -157,8 +166,10 @@
         }
     }
 
-    
-    CDVPluginResult * pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK];
+    NSMutableDictionary * event = [[NSMutableDictionary alloc]init];
+    [event setValue:@"init" forKey:@"type"];
+
+    CDVPluginResult * pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsDictionary:event];
     [pluginResult setKeepCallbackAsBool:YES];
     [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
 }
