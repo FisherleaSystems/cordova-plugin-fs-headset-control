@@ -1,6 +1,6 @@
 /*! ********************************************************************
  *
- * Copyright (c) 2018-2019, Fisherlea Systems
+ * Copyright (c) 2018-2020, Fisherlea Systems
  *
  * This software contains proprietary information that is the property
  * of Fisherlea Systems. All Rights Reserved.
@@ -15,6 +15,12 @@ var exec = require('cordova/exec');
  * @class Cordova plugin for control of Bluetooth headsets.
  */
 function HeadsetControl() {
+    /** Connected state of the headset.
+     * @type boolean
+     * @default false;
+     */
+    this.connected = false;
+
     /** Fired for all events.
      * @type function
      */
@@ -83,12 +89,20 @@ HeadsetControl.prototype._init = function () {
 
         switch (event.type) {
             case "connected":
-                if(typeof that.onconnected === "function") {
+                if ((event.device == "mic") ||
+		    (event.device == "wired") ||
+                    (event.device == "bluetooth" && event.subType == "sco")) {
+                    that.connected = true;
+                }
+
+                if (typeof that.onconnected === "function") {
                     that.onconnected(event);
                 }
                 break;
 
             case "disconnected":
+                that.connected = false;
+
                 if(typeof that.ondisconnected === "function") {
                     that.ondisconnected(event);
                 }
