@@ -8,7 +8,7 @@
 
   <description>Detect and control connection to a wired or Bluetooth headset.</description>
 
-  <license>Proprietary</license>
+  <license>UNLICENSED</license>
 
   <engines>
     <engine name="cordova" version=">=3.0.0"/>
