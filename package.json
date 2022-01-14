@@ -5,7 +5,7 @@
     "email": "wayne@fisherlea.com"
   },
   "bugs": {
-    "url": "https://github.com/FisherleaSystems/cordova-plugin-fs-headset-detection/issues"
+    "url": "https://github.com/FisherleaSystems/cordova-plugin-fs-headset-control/issues"
   },
   "contributors": [
     "Eddy Verbruggen <eddyverbruggen@gmail.com>"
@@ -21,7 +21,7 @@
   "deprecated": false,
   "description": "Detect and control a wired or Bluetooth headset.",
   "devDependencies": {},
-  "homepage": "https://github.com/FisherleaSystems/cordova-plugin-fs-headset-detection#readme",
+  "homepage": "https://github.com/FisherleaSystems/cordova-plugin-fs-headset-control#readme",
   "keywords": [
     "cordova",
     "bluetooth",
@@ -45,7 +45,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/FisherleaSystems/cordova-plugin-fs-headset-detection.git"
+    "url": "git+https://github.com/FisherleaSystems/cordova-plugin-fs-headset-control.git"
   },
   "version": "1.2.0"
 }
