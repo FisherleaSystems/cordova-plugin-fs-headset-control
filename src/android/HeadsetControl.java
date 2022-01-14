@@ -1,9 +1,9 @@
 /*! ********************************************************************
  *
- * Copyright (c) 2018-2019, Fisherlea Systems
+ * Copyright (c) 2018-2022, Fisherlea Systems
  *
- * This software contains proprietary information that is the property
- * of Fisherlea Systems. All Rights Reserved.
+ * Licensed under the MIT license. See the LICENSE file in the root
+ * directory for more details.
  *
  ***********************************************************************/
 
@@ -61,8 +61,7 @@ public class HeadsetControl extends CordovaPlugin {
     BroadcastReceiver receiver;
     BluetoothProfile.ServiceListener serviceListener;
 
-    public HeadsetControl()
-    {
+    public HeadsetControl() {
         this.receiver = null;
         this.serviceListener = null;
         this.bluetoothHeadset = null;
@@ -83,18 +82,19 @@ public class HeadsetControl extends CordovaPlugin {
             private static final String LOG_TAG = "HeadsetProfileListener";
 
             public void onServiceConnected(int profile, BluetoothProfile proxy) {
-                Log.d(LOG_TAG, "BluetoothProfile.ServiceListener().onServiceConnected(" + profile +")");
+                Log.d(LOG_TAG, "BluetoothProfile.ServiceListener().onServiceConnected(" + profile + ")");
                 bluetoothHeadset = (BluetoothHeadset) proxy;
 
                 List<BluetoothDevice> devices = bluetoothHeadset.getConnectedDevices();
-                if(! devices.isEmpty()) {
+                if (!devices.isEmpty()) {
                     headsetConnected = true;
 
                     bluetoothDevice = devices.get(0);
                 }
             };
+
             public void onServiceDisconnected(int profile) {
-                Log.d(LOG_TAG, "BluetoothProfile.ServiceListener().onServiceDisconnected(" + profile +")");
+                Log.d(LOG_TAG, "BluetoothProfile.ServiceListener().onServiceDisconnected(" + profile + ")");
                 bluetoothHeadset = null;
                 bluetoothDevice = null;
                 headsetConnected = false;
@@ -102,7 +102,7 @@ public class HeadsetControl extends CordovaPlugin {
         };
 
         Log.d(LOG_TAG, "Getting Bluetooth Headset profile proxy.");
-        if(!bluetoothAdapter.getProfileProxy(mCachedWebView.getContext(), serviceListener, BluetoothProfile.HEADSET)) {
+        if (!bluetoothAdapter.getProfileProxy(mCachedWebView.getContext(), serviceListener, BluetoothProfile.HEADSET)) {
             Log.e(LOG_TAG, "Failed to get HEADSET profile.");
         }
 
@@ -125,44 +125,44 @@ public class HeadsetControl extends CordovaPlugin {
                 if (intent.getAction().equals(AudioManager.ACTION_HEADSET_PLUG)) {
                     state = intent.getIntExtra("state", -1);
                     switch (state) {
-                        case 0:
-                            Log.d(LOG_TAG, "Wired headset was unplugged");
-                            wiredConnected = false;
-                            fireConnectEvent("disconnected", "wired");
-                            break;
-                        case 1:
-                            Log.d(LOG_TAG, "Wired headset was plugged in");
-                            wiredConnected = true;
-                            fireConnectEvent("connected", "wired");
-                            break;
-                        default:
-                            Log.d(LOG_TAG, "I have no idea what the headset state is");
+                    case 0:
+                        Log.d(LOG_TAG, "Wired headset was unplugged");
+                        wiredConnected = false;
+                        fireConnectEvent("disconnected", "wired");
+                        break;
+                    case 1:
+                        Log.d(LOG_TAG, "Wired headset was plugged in");
+                        wiredConnected = true;
+                        fireConnectEvent("connected", "wired");
+                        break;
+                    default:
+                        Log.d(LOG_TAG, "I have no idea what the headset state is");
                     }
                 } else if (intent.getAction().equals(AudioManager.ACTION_SCO_AUDIO_STATE_UPDATED)) {
                     state = intent.getIntExtra(AudioManager.EXTRA_SCO_AUDIO_STATE, -1);
                     Log.d(LOG_TAG, "state: " + state);
                     switch (state) {
-                        case AudioManager.SCO_AUDIO_STATE_DISCONNECTED:
-                            Log.d(LOG_TAG, "SCO headset is disconnected");
-                            if(scoConnected) {
-                                fireConnectEvent("disconnecting", "bluetooth", "sco");
-                            }
+                    case AudioManager.SCO_AUDIO_STATE_DISCONNECTED:
+                        Log.d(LOG_TAG, "SCO headset is disconnected");
+                        if (scoConnected) {
+                            fireConnectEvent("disconnecting", "bluetooth", "sco");
+                        }
 
-                            handleSCODisconnect();
-                            scoConnected = false;
-                            fireConnectEvent("disconnected", "bluetooth", "sco");
-                            break;
-                        case AudioManager.SCO_AUDIO_STATE_CONNECTED:
-                            Log.d(LOG_TAG, "SCO headset is connected");
-                            fireConnectEvent("connected", "bluetooth", "sco");
-                            scoConnected = true;
-                            break;
-                        case AudioManager.SCO_AUDIO_STATE_CONNECTING:
-                            Log.d(LOG_TAG, "SCO headset is connecting");
-                            fireConnectEvent("connecting", "bluetooth", "sco");
-                            break;
-                        default:
-                            Log.d(LOG_TAG, "I have no idea what the SCO headset state is");
+                        handleSCODisconnect();
+                        scoConnected = false;
+                        fireConnectEvent("disconnected", "bluetooth", "sco");
+                        break;
+                    case AudioManager.SCO_AUDIO_STATE_CONNECTED:
+                        Log.d(LOG_TAG, "SCO headset is connected");
+                        fireConnectEvent("connected", "bluetooth", "sco");
+                        scoConnected = true;
+                        break;
+                    case AudioManager.SCO_AUDIO_STATE_CONNECTING:
+                        Log.d(LOG_TAG, "SCO headset is connecting");
+                        fireConnectEvent("connecting", "bluetooth", "sco");
+                        break;
+                    default:
+                        Log.d(LOG_TAG, "I have no idea what the SCO headset state is");
                     }
                 } else if (intent.getAction().equals(BluetoothDevice.ACTION_ACL_CONNECTED)) {
                     BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
@@ -181,29 +181,29 @@ public class HeadsetControl extends CordovaPlugin {
                     Log.d(LOG_TAG, "headset connect change from device: " + device.getName());
                     state = intent.getIntExtra(BluetoothHeadset.EXTRA_STATE, -1);
                     switch (state) {
-                        case BluetoothHeadset.STATE_DISCONNECTED:
-                            Log.d(LOG_TAG, "BT headset is disconnected");
-                            fireConnectEvent("disconnected", "bluetooth", "headset", device.getName());
-                            headsetConnected = false;
-                            bluetoothDevice = null;
-                            break;
-                        case BluetoothHeadset.STATE_DISCONNECTING:
-                            Log.d(LOG_TAG, "BT headset is disconnecting");
-                            fireConnectEvent("disconnecting", "bluetooth", "headset", device.getName());
-                            headsetConnected = false;
-                            break;
-                        case BluetoothHeadset.STATE_CONNECTING:
-                            Log.d(LOG_TAG, "BT headset is connecting");
-                            fireConnectEvent("connecting", "bluetooth", "headset", device.getName());
-                            break;
-                        case BluetoothHeadset.STATE_CONNECTED:
-                            headsetConnected = true;
-                            bluetoothDevice = device;
-                            Log.d(LOG_TAG, "BT headset is connected");
-                            fireConnectEvent("connected", "bluetooth", "headset", device.getName());
-                            break;
-                        default:
-                            Log.d(LOG_TAG, "I have no idea what the BT headset state is");
+                    case BluetoothHeadset.STATE_DISCONNECTED:
+                        Log.d(LOG_TAG, "BT headset is disconnected");
+                        fireConnectEvent("disconnected", "bluetooth", "headset", device.getName());
+                        headsetConnected = false;
+                        bluetoothDevice = null;
+                        break;
+                    case BluetoothHeadset.STATE_DISCONNECTING:
+                        Log.d(LOG_TAG, "BT headset is disconnecting");
+                        fireConnectEvent("disconnecting", "bluetooth", "headset", device.getName());
+                        headsetConnected = false;
+                        break;
+                    case BluetoothHeadset.STATE_CONNECTING:
+                        Log.d(LOG_TAG, "BT headset is connecting");
+                        fireConnectEvent("connecting", "bluetooth", "headset", device.getName());
+                        break;
+                    case BluetoothHeadset.STATE_CONNECTED:
+                        headsetConnected = true;
+                        bluetoothDevice = device;
+                        Log.d(LOG_TAG, "BT headset is connected");
+                        fireConnectEvent("connected", "bluetooth", "headset", device.getName());
+                        break;
+                    default:
+                        Log.d(LOG_TAG, "I have no idea what the BT headset state is");
                     }
                 } else if (intent.getAction().equals(Intent.ACTION_VOICE_COMMAND)) {
                     Log.d(LOG_TAG, "Voice Command");
@@ -225,12 +225,13 @@ public class HeadsetControl extends CordovaPlugin {
                 callbackContext.sendPluginResult(new PluginResult(PluginResult.Status.OK, status));
                 return true;
             } else if (ACTION_CONNECT.equals(action)) {
-                if(headsetConnected) {
+                if (headsetConnected) {
                     fireConnectEvent("connect", "bluetooth", "sco");
                     if (!scoStarted) {
                         Log.d(LOG_TAG, "setMode(AudioManager.MODE_IN_COMMUNICATION)");
                         audioManager.setMode(AudioManager.MODE_IN_COMMUNICATION);
-                        // For setBluetoothScoOn() - set true to route SCO (voice) audio to/from Bluetooth headset; false to route audio to/from phone earpiece
+                        // For setBluetoothScoOn() - set true to route SCO (voice) audio to/from Bluetooth headset; false to route audio to/from phone
+                        // earpiece
                         audioManager.setBluetoothScoOn(true);
 
                         Log.d(LOG_TAG, "startBluetoothSco()");
@@ -252,7 +253,7 @@ public class HeadsetControl extends CordovaPlugin {
                 }
                 return true;
             } else if (ACTION_DISCONNECT.equals(action)) {
-                if(headsetConnected) {
+                if (headsetConnected) {
                     fireConnectEvent("disconnect", "bluetooth", "sco");
                     if (scoStarted) {
                         Log.d(LOG_TAG, "audioManager.stopBluetoothSco()");
@@ -289,8 +290,8 @@ public class HeadsetControl extends CordovaPlugin {
                 pluginResult.setKeepCallback(true);
                 callbackContext.sendPluginResult(pluginResult);
 
-                if(headsetConnected) {
-                    if(bluetoothDevice != null) {
+                if (headsetConnected) {
+                    if (bluetoothDevice != null) {
                         fireConnectEvent("connected", "bluetooth", "headset", bluetoothDevice.getName());
                     } else {
                         fireConnectEvent("connected", "bluetooth", "headset");
@@ -310,7 +311,7 @@ public class HeadsetControl extends CordovaPlugin {
 
     private void handleSCODisconnect() {
         Log.d(LOG_TAG, "handleSCODisconnect()");
-        if(scoStarted) {
+        if (scoStarted) {
             audioManager.setBluetoothScoOn(false);
             scoStarted = false;
         }
@@ -329,60 +330,61 @@ public class HeadsetControl extends CordovaPlugin {
 
         AudioDeviceInfo devices[] = audioManager.getDevices(AudioManager.GET_DEVICES_ALL);
 
-        for(int i = 0; i < devices.length; i++) {
+        for (int i = 0; i < devices.length; i++) {
             AudioDeviceInfo device = devices[i];
 
-            if(device.isSource()) {
+            if (device.isSource()) {
                 sources++;
             } else {
                 sinks++;
             }
 
-            switch(device.getType()) {
-                case AudioDeviceInfo.TYPE_BLUETOOTH_SCO:
-                    type = "SCO";
-                    bluetooth = true;
-                    headset = true;
-                    break;
+            switch (device.getType()) {
+            case AudioDeviceInfo.TYPE_BLUETOOTH_SCO:
+                type = "SCO";
+                bluetooth = true;
+                headset = true;
+                break;
 
-                case AudioDeviceInfo.TYPE_BLUETOOTH_A2DP:
-                    type = "A2DP";
-                    bluetooth = true;
-                    headset = true;
-                    break;
+            case AudioDeviceInfo.TYPE_BLUETOOTH_A2DP:
+                type = "A2DP";
+                bluetooth = true;
+                headset = true;
+                break;
 
-                case AudioDeviceInfo.TYPE_BUILTIN_EARPIECE:
-                    type = "Builtin ear-piece";
-                    break;
+            case AudioDeviceInfo.TYPE_BUILTIN_EARPIECE:
+                type = "Builtin ear-piece";
+                break;
 
-                case AudioDeviceInfo.TYPE_BUILTIN_SPEAKER:
-                    type = "Builtin speaker";
-                    break;
+            case AudioDeviceInfo.TYPE_BUILTIN_SPEAKER:
+                type = "Builtin speaker";
+                break;
 
-                case AudioDeviceInfo.TYPE_BUILTIN_MIC:
-                    type = "Builtin MIC";
-                    break;
+            case AudioDeviceInfo.TYPE_BUILTIN_MIC:
+                type = "Builtin MIC";
+                break;
 
-                case AudioDeviceInfo.TYPE_TELEPHONY:
-                    type = "Telephony";
-                    break;
+            case AudioDeviceInfo.TYPE_TELEPHONY:
+                type = "Telephony";
+                break;
 
-                case AudioDeviceInfo.TYPE_WIRED_HEADSET:
-                    type = "Wired Headset";
-                    headset = true;
-                    break;
+            case AudioDeviceInfo.TYPE_WIRED_HEADSET:
+                type = "Wired Headset";
+                headset = true;
+                break;
 
-                case AudioDeviceInfo.TYPE_WIRED_HEADPHONES:
-                    type = "Wired Headphones";
-                    headset = true;
-                    break;
+            case AudioDeviceInfo.TYPE_WIRED_HEADPHONES:
+                type = "Wired Headphones";
+                headset = true;
+                break;
 
-                default:
-                    type = "Unknown " + device.getType();
-                    break;
+            default:
+                type = "Unknown " + device.getType();
+                break;
             }
 
-            Log.d(LOG_TAG, (device.isSource() ? "source" : "  sink") + " name: " + device.getProductName() + " type: " + type);
+            Log.d(LOG_TAG,
+                    (device.isSource() ? "source" : "  sink") + " name: " + device.getProductName() + " type: " + type);
         }
 
         JSONObject status = new JSONObject();
@@ -393,8 +395,8 @@ public class HeadsetControl extends CordovaPlugin {
             status.put("sources", sources);
             status.put("sinks", sinks);
 
-            if(headset) {
-                if(bluetooth) {
+            if (headset) {
+                if (bluetooth) {
                     status.put("connected", scoConnected);
                 } else {
                     status.put("connected", wiredConnected);
@@ -423,7 +425,7 @@ public class HeadsetControl extends CordovaPlugin {
 
     private void removeHeadsetListener() {
         Log.d(LOG_TAG, "removeHeadsetListener");
-        if(scoStarted) {
+        if (scoStarted) {
             audioManager.stopBluetoothSco();
             scoStarted = false;
             Log.d(LOG_TAG, "stopBluetoothSco()");
@@ -438,7 +440,7 @@ public class HeadsetControl extends CordovaPlugin {
             }
         }
 
-        if(this.serviceListener != null && this.bluetoothHeadset != null) {
+        if (this.serviceListener != null && this.bluetoothHeadset != null) {
             bluetoothAdapter.closeProfileProxy(BluetoothProfile.HEADSET, this.bluetoothHeadset);
             this.bluetoothHeadset = null;
         }
@@ -447,12 +449,12 @@ public class HeadsetControl extends CordovaPlugin {
     private void fireConnectEvent(String type, String deviceType, String subType, String name) {
         Log.d(LOG_TAG, "fire event: " + type + " - " + deviceType);
 
-        if(initCallbackContext != null) {
+        if (initCallbackContext != null) {
             JSONObject event = new JSONObject();
             try {
                 event.put("type", type);
 
-                if(deviceType != null) {
+                if (deviceType != null) {
                     event.put("device", deviceType);
                 }
 

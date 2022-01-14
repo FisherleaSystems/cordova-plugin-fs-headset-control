@@ -1,9 +1,9 @@
 /*! ********************************************************************
  *
- * Copyright (c) 2018-2019, Fisherlea Systems
+ * Copyright (c) 2018-2022, Fisherlea Systems
  *
- * This software contains proprietary information that is the property
- * of Fisherlea Systems. All Rights Reserved.
+ * Licensed under the MIT license. See the LICENSE file in the root
+ * directory for more details.
  *
  ***********************************************************************/
 

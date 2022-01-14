@@ -1,7 +1,8 @@
 {
+  "name": "@fisherleasystems/cordova-plugin-fs-headset-control",
   "author": {
-    "name": "Fisherlea Systems",
-    "email": "support@fisherlea.com"
+    "name": "Wayne Fisher",
+    "email": "wayne@fisherlea.com"
   },
   "cordova": {
     "id": "cordova-plugin-fs-headset-control",
@@ -14,7 +15,6 @@
   "deprecated": false,
   "description": "Detect and control a wired or Bluetooth headset.",
   "devDependencies": {},
-  "directories": {},
   "keywords": [
     "cordova",
     "bluetooth",
@@ -26,14 +26,15 @@
     "cordova-ios",
     "cordova-android"
   ],
-  "license": "UNLICENSED",
+  "license": "MIT",
   "maintainers": [
     {
       "name": "Wayne Fisher",
       "email": "wayne@fisherlea.com"
     }
   ],
-  "name": "cordova-plugin-fs-headset-control",
-  "optionalDependencies": {},
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com/FisherleaSystems"
+  },
   "version": "1.1.0"
 }
