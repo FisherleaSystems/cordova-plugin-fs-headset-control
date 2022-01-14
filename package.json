@@ -4,6 +4,9 @@
     "name": "Wayne Fisher",
     "email": "wayne@fisherlea.com"
   },
+  "contributors": [
+    "Eddy Verbruggen <eddyverbruggen@gmail.com>"
+  ],
   "cordova": {
     "id": "cordova-plugin-fs-headset-control",
     "platforms": [

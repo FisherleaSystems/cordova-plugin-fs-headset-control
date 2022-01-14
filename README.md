@@ -19,3 +19,7 @@ Then, using the command line tools run:
 Or, to install directly from the GitHub repository, run the following:
 
     cordova plugin add https://github.com/FisherleaSystems/HeadsetControl
+
+# Credits
+
+Initially based on the [cordova-plugin-headsetdetection](https://github.com/EddyVerbruggen/HeadsetDetection-PhoneGap-Plugin) plugin.
