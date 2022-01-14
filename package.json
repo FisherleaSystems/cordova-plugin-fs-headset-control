@@ -47,5 +47,5 @@
     "type": "git",
     "url": "git+https://github.com/FisherleaSystems/cordova-plugin-fs-headset-control.git"
   },
-  "version": "1.2.0"
+  "version": "1.2.1"
 }
