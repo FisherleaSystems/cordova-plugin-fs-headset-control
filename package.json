@@ -21,6 +21,12 @@
   "deprecated": false,
   "description": "Detect and control a wired or Bluetooth headset.",
   "devDependencies": {},
+  "engines": {
+    "cordovaDependencies": {
+      "1.2.0": { "cordova-android": "<11.0.0"},
+      "1.3.0": { "cordova-android": ">=11.0.0"}
+    }
+  },
   "homepage": "https://github.com/FisherleaSystems/cordova-plugin-fs-headset-control#readme",
   "keywords": [
     "cordova",
@@ -47,5 +53,5 @@
     "type": "git",
     "url": "git+https://github.com/FisherleaSystems/cordova-plugin-fs-headset-control.git"
   },
-  "version": "1.2.1"
+  "version": "1.3.0"
 }

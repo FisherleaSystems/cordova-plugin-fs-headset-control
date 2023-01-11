@@ -1,4 +1,4 @@
-# SpeechSynthesisPlugin
+# HeadsetControl
 
 Headset control plugin for Cordova.
 
