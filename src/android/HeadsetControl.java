@@ -1,6 +1,6 @@
 /*! ********************************************************************
  *
- * Copyright (c) 2018-2022, Fisherlea Systems
+ * Copyright (c) 2018-2023, Fisherlea Systems
  *
  * Licensed under the MIT license. See the LICENSE file in the root
  * directory for more details.
@@ -83,10 +83,10 @@ public class HeadsetControl extends CordovaPlugin {
         bluetoothAdapter = bluetoothManager.getAdapter(); // Jelly Bean (API 17) or older need getDefaultAdapter().
 
         serviceListener = new BluetoothProfile.ServiceListener() {
-            private static final String LOG_TAG = "HeadsetProfileListener";
+            private static final String LOG_TAG = "HeadsetControl.ProfileListener";
 
             public void onServiceConnected(int profile, BluetoothProfile proxy) {
-                Log.d(LOG_TAG, "BluetoothProfile.ServiceListener().onServiceConnected(" + profile + ")");
+                Log.d(LOG_TAG, "onServiceConnected(" + profile + ")");
                 bluetoothHeadset = (BluetoothHeadset) proxy;
 
                 List<BluetoothDevice> devices = bluetoothHeadset.getConnectedDevices();
@@ -98,7 +98,7 @@ public class HeadsetControl extends CordovaPlugin {
             };
 
             public void onServiceDisconnected(int profile) {
-                Log.d(LOG_TAG, "BluetoothProfile.ServiceListener().onServiceDisconnected(" + profile + ")");
+                Log.d(LOG_TAG, "onServiceDisconnected(" + profile + ")");
                 bluetoothHeadset = null;
                 bluetoothDevice = null;
                 headsetConnected = false;
@@ -119,7 +119,7 @@ public class HeadsetControl extends CordovaPlugin {
         intentFilter.addAction(BluetoothHeadset.ACTION_CONNECTION_STATE_CHANGED);
 
         this.receiver = new BroadcastReceiver() {
-            private static final String LOG_TAG = "HeadsetDetectReceiver";
+            private static final String LOG_TAG = "HeadsetControl.BroadcastReceiver";
 
             @Override
             public void onReceive(Context context, Intent intent) {
@@ -334,6 +334,8 @@ public class HeadsetControl extends CordovaPlugin {
         String type;
         boolean bluetooth = false;
         boolean headset = false;
+        JSONArray srcList = new JSONArray();
+        JSONArray sinkList = new JSONArray();
 
         Log.d(LOG_TAG, "AudioManager mode: " + audioManager.getMode());
 
@@ -341,12 +343,6 @@ public class HeadsetControl extends CordovaPlugin {
 
         for (int i = 0; i < devices.length; i++) {
             AudioDeviceInfo device = devices[i];
-
-            if (device.isSource()) {
-                sources++;
-            } else {
-                sinks++;
-            }
 
             switch (device.getType()) {
                 case AudioDeviceInfo.TYPE_BLUETOOTH_SCO:
@@ -387,9 +383,38 @@ public class HeadsetControl extends CordovaPlugin {
                     headset = true;
                     break;
 
+                case AudioDeviceInfo.TYPE_USB_HEADSET:
+                    type = "USB Headset";
+                    headset = true;
+                    break;
+
+                case AudioDeviceInfo.TYPE_DOCK:
+                    type = "Dock";
+                    break;
+
+                case AudioDeviceInfo.TYPE_HDMI:
+                    type = "HDMI";
+                    break;
+
+                case AudioDeviceInfo.TYPE_HDMI_EARC:
+                    type = "HDMI EARC";
+                    break;
+
+                case AudioDeviceInfo.TYPE_REMOTE_SUBMIX:
+                    type = "Remote Submix";
+                    break;
+
                 default:
                     type = "Unknown " + device.getType();
                     break;
+            }
+
+            if (device.isSource()) {
+                sources++;
+                srcList.put(type);
+            } else {
+                sinks++;
+                sinkList.put(type);
             }
 
             Log.d(LOG_TAG,
@@ -413,6 +438,9 @@ public class HeadsetControl extends CordovaPlugin {
             } else {
                 status.put("connected", false);
             }
+
+            status.put("sourceList", srcList);
+            status.put("sinkList", sinkList);
         } catch (JSONException e) {
             // this will never happen
         }
