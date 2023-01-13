@@ -24,7 +24,7 @@
 - (void) pluginInitialize {
     NSError *error;
     AVAudioSessionRouteDescription *route;
-    
+
     self.currentDevice = nil;
     self.a2dpConnected = NO;
     self.scoConnected = NO;
@@ -136,6 +136,15 @@
     [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
 }
 
+- (void) getPermissions:(CDVInvokedUrlCommand*)command {
+    DBG(@"[hc] getPermissions()");
+
+    // Doesn't currently do anything for iOS.
+
+    CDVPluginResult * pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK];
+    [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
+}
+
 - (void) init:(CDVInvokedUrlCommand*)command {
     AVAudioSessionRouteDescription *route;
 
@@ -148,7 +157,7 @@
         route = self.audioSession.currentRoute;
         @try {
             self.currentDevice = route.inputs[0];
-            
+
             if(self.currentDevice) {
                 if([self.currentDevice.portType isEqualToString:AVAudioSessionPortHeadphones] ||
                    [self.currentDevice.portType isEqualToString:AVAudioSessionPortBuiltInMic]) {
@@ -245,7 +254,7 @@
     }
 
     DBG1(@"[hc] disconnectFromCurrentDevice: %@", port.portType);
-    
+
     if([port.portType isEqualToString:AVAudioSessionPortBluetoothHFP]) {
         if(self.scoConnected || disconnectEvents) {
             [self fireConnectEvent:(NSString *)@"disconnect" forDevice:(NSString *)@"bluetooth" withSubType:@"sco" withName:port.portName];
@@ -279,7 +288,7 @@
         }
         [self fireConnectEvent:(NSString *)@"disconnected" forDevice:(NSString *)@"mic" withName:port.portName];
     }
-    
+
     self.isConnected = NO;
 }
 
@@ -316,13 +325,13 @@
         if(doConnect) {
             [self fireConnectEvent:(NSString *)@"connect" forDevice:(NSString *)@"bluetooth" withSubType:@"a2dp" withName:port.portName];
         }
-        
+
         if(routeChange) {
             [self fireConnectEvent:(NSString *)@"connect" forDevice:(NSString *)@"bluetooth" withSubType:@"headset" withName:port.portName];
         }
-        
+
         [self fireConnectEvent:(NSString *)@"connected" forDevice:(NSString *)@"bluetooth" withSubType:@"headset" withName:port.portName];
-        
+
         if(doConnect) {
             self.a2dpConnected = YES;
             [self fireConnectEvent:(NSString *)@"connected" forDevice:(NSString *)@"bluetooth" withSubType:@"a2dp" withName:port.portName];
@@ -340,7 +349,7 @@
 
         [self fireConnectEvent:(NSString *)@"connected" forDevice:(NSString *)@"mic" withName:port.portName];
     }
-    
+
     self.isConnected = YES;
     self.currentDevice = port;
 }

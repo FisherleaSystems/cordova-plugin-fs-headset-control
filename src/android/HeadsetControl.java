@@ -16,7 +16,6 @@ import org.apache.cordova.CordovaPlugin;
 import org.apache.cordova.PluginResult;
 import org.apache.cordova.CordovaInterface;
 import org.apache.cordova.CordovaWebView;
-import org.apache.cordova.PermissionHelper;
 
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
@@ -28,6 +27,7 @@ import android.content.Context;
 import android.content.ComponentName;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.pm.PackageManager;
 import android.media.AudioDeviceInfo;
 import android.media.AudioManager;
 import android.speech.RecognizerIntent;
@@ -46,6 +46,7 @@ public class HeadsetControl extends CordovaPlugin {
     private static final String ACTION_GETSTATUS = "getStatus";
     private static final String ACTION_DISCONNECT = "disconnect";
     private static final String ACTION_INIT = "init";
+    private static final String ACTION_GETPERMISSIONS = "getPermissions";
 
     protected final static String[] permissions = { Manifest.permission.BLUETOOTH_CONNECT };
 
@@ -58,6 +59,7 @@ public class HeadsetControl extends CordovaPlugin {
     private BluetoothAdapter bluetoothAdapter;
     private BluetoothHeadset bluetoothHeadset;
     private BluetoothDevice bluetoothDevice;
+    private CallbackContext getPermsContext;
     private CallbackContext initCallbackContext;
 
     protected static CordovaWebView mCachedWebView = null;
@@ -89,11 +91,13 @@ public class HeadsetControl extends CordovaPlugin {
                 Log.d(LOG_TAG, "onServiceConnected(" + profile + ")");
                 bluetoothHeadset = (BluetoothHeadset) proxy;
 
-                List<BluetoothDevice> devices = bluetoothHeadset.getConnectedDevices();
-                if (!devices.isEmpty()) {
-                    headsetConnected = true;
+                if (hasPermission()) {
+                    List<BluetoothDevice> devices = bluetoothHeadset.getConnectedDevices();
+                    if (!devices.isEmpty()) {
+                        headsetConnected = true;
 
-                    bluetoothDevice = devices.get(0);
+                        bluetoothDevice = devices.get(0);
+                    }
                 }
             };
 
@@ -125,7 +129,7 @@ public class HeadsetControl extends CordovaPlugin {
             public void onReceive(Context context, Intent intent) {
                 int state;
 
-                Log.d(LOG_TAG, "action: " + intent.getAction());
+                Log.d(LOG_TAG, "intent action: " + intent.getAction());
                 if (intent.getAction().equals(AudioManager.ACTION_HEADSET_PLUG)) {
                     state = intent.getIntExtra("state", -1);
                     switch (state) {
@@ -229,7 +233,7 @@ public class HeadsetControl extends CordovaPlugin {
                 callbackContext.sendPluginResult(new PluginResult(PluginResult.Status.OK, status));
                 return true;
             } else if (ACTION_CONNECT.equals(action)) {
-                if (headsetConnected) {
+                if (headsetConnected && hasPermission()) {
                     fireConnectEvent("connect", "bluetooth", "sco");
                     if (!scoStarted) {
                         Log.d(LOG_TAG, "setMode(AudioManager.MODE_IN_COMMUNICATION)");
@@ -295,16 +299,23 @@ public class HeadsetControl extends CordovaPlugin {
                 pluginResult.setKeepCallback(true);
                 callbackContext.sendPluginResult(pluginResult);
 
-                if (!hasPermisssion()) {
-                    PermissionHelper.requestPermissions(this, 0, permissions);
-                }
-
-                if (hasPermisssion() && headsetConnected) {
+                if (headsetConnected) {
                     if (bluetoothDevice != null) {
                         fireConnectEvent("connected", "bluetooth", "headset", bluetoothDevice.getName());
                     } else {
                         fireConnectEvent("connected", "bluetooth", "headset");
                     }
+                }
+                return true;
+            } else if (ACTION_GETPERMISSIONS.equals(action)) {
+                if (hasPermission()) {
+                    PluginResult r = new PluginResult(PluginResult.Status.OK);
+                    callbackContext.sendPluginResult(r);
+                    return true;
+                } else {
+                    getPermsContext = callbackContext;
+
+                    requestPermissions(0);
                 }
                 return true;
             } else {
@@ -318,9 +329,35 @@ public class HeadsetControl extends CordovaPlugin {
         }
     }
 
+    public void onRequestPermissionResult(int requestCode, String[] permissions,
+            int[] grantResults) throws JSONException {
+        PluginResult result;
+
+        Log.d(LOG_TAG, "onRequestPermissionResult( " + requestCode + " )");
+
+        if (getPermsContext != null) {
+            for (int i = 0; i < grantResults.length; i++) {
+                int r = grantResults[i];
+                if (r == PackageManager.PERMISSION_DENIED) {
+                    Log.d(LOG_TAG, "Permission denied for " + permissions[i]);
+                    result = new PluginResult(PluginResult.Status.ERROR, "permission denied");
+                    getPermsContext.sendPluginResult(result);
+                    return;
+                }
+
+            }
+
+            Log.d(LOG_TAG, "Permission granted!");
+            result = new PluginResult(PluginResult.Status.OK);
+            getPermsContext.sendPluginResult(result);
+
+            getPermsContext = null;
+        }
+    }
+
     private void handleSCODisconnect() {
         Log.d(LOG_TAG, "handleSCODisconnect()");
-        if (scoStarted) {
+        if (scoStarted && hasPermission()) {
             audioManager.setBluetoothScoOn(false);
             scoStarted = false;
         }
@@ -337,6 +374,7 @@ public class HeadsetControl extends CordovaPlugin {
         JSONArray srcList = new JSONArray();
         JSONArray sinkList = new JSONArray();
 
+        Log.d(LOG_TAG, "headsetStatus()");
         Log.d(LOG_TAG, "AudioManager mode: " + audioManager.getMode());
 
         AudioDeviceInfo devices[] = audioManager.getDevices(AudioManager.GET_DEVICES_ALL);
@@ -524,24 +562,31 @@ public class HeadsetControl extends CordovaPlugin {
     }
 
     /*
+     * Request our permissions.
+     */
+    public void requestPermissions(int requestCode) {
+        Log.d(LOG_TAG, "requestPermissions()");
+
+        cordova.requestPermissions(this, requestCode, permissions);
+    }
+
+    /*
      * Check for our permissions.
+     * The CordovaPlugin interface has a spelling mistake with the 3 s's.
      */
     public boolean hasPermisssion() {
+        Log.d(LOG_TAG, "hasPermisssion()");
+        return this.hasPermission();
+    }
+
+    public boolean hasPermission() {
+        Log.d(LOG_TAG, "hasPermission()");
+
         for (String p : permissions) {
-            if (!PermissionHelper.hasPermission(this, p)) {
+            if (!cordova.hasPermission(p)) {
                 return false;
             }
         }
         return true;
-    }
-
-    /*
-     * We override this so that we can access the permissions variable, which no
-     * longer exists in the parent class, since we can't initialize it reliably in
-     * the constructor!
-     */
-
-    public void requestPermissions(int requestCode) {
-        PermissionHelper.requestPermissions(this, requestCode, permissions);
     }
 }

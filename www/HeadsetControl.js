@@ -63,6 +63,12 @@ function HeadsetControl() {
      */
     this.onerror = null;
 
+    /** Specifies if logging is enabled for this plugin.
+     * @type boolean
+     * @default false
+     */
+    this.logging = false
+
     /** Connect timer.
      * @private
      */
@@ -72,13 +78,27 @@ function HeadsetControl() {
 }
 
 /**
+ * A logging function.
+ *
+ * @param {String} t The text for the log message.
+ * @param {boolean} [always=false] The message should always be displayed.
+ */
+HeadsetControl.prototype.log = function (t, always) {
+    if (this.logging || always) {
+        console.log('HeadsetControl: ' + t)
+    }
+}
+
+  /**
  * Initialize the plugin.
  * @private
  */
 HeadsetControl.prototype._init = function () {
     var that = this;
 
-    exec(function(event) {
+    this.log("_init()");
+
+    exec(function (event) {
         if (typeof event !== "object" || event.type == "init") {
             return;
         }
@@ -160,6 +180,8 @@ HeadsetControl.prototype._init = function () {
 HeadsetControl.prototype.connect = function (duration, success, failure) {
     var that = this;
 
+    this.log("connect(" + duration + ")");
+
     if (this._connectTimer) {
         clearTimeout(this._connectTimer);
     }
@@ -180,7 +202,20 @@ HeadsetControl.prototype.connect = function (duration, success, failure) {
  * @param {function} [failure] The failure callback.
  */
 HeadsetControl.prototype.getStatus = function (success, failure) {
+    this.log("getStatus()");
+
     exec(success, failure, "HeadsetControl", "getStatus", []);
+};
+
+/**
+ * Get the permission status of the plugin.
+ * @param {function} [success] The success callback. The plugin has the required permissions.
+ * @param {function} [failure] The failure callback. The plugin does not have the required permissions.
+ */
+HeadsetControl.prototype.getPermissions = function (success, failure) {
+    this.log("getPermissions()");
+
+    exec(success, failure, "HeadsetControl", "getPermissions", []);
 };
 
 /**
@@ -189,6 +224,8 @@ HeadsetControl.prototype.getStatus = function (success, failure) {
  * @param {function} [failure] The failure callback.
  */
 HeadsetControl.prototype.disconnect = function (success, failure) {
+    this.log("disconnect()");
+
     if (this._connectTimer) {
         clearTimeout(this._connectTimer);
         this._connectTimer = null;
