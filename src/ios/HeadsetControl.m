@@ -1,6 +1,6 @@
 /*! ********************************************************************
  *
- * Copyright (c) 2018-2022, Fisherlea Systems
+ * Copyright (c) 2018-2023, Fisherlea Systems
  *
  * Licensed under the MIT license. See the LICENSE file in the root
  * directory for more details.
@@ -47,12 +47,14 @@
 
     route = self.audioSession.currentRoute;
     @try {
-        self.currentDevice = route.inputs[0];
+        if([route.inputs count] > 0) {
+            self.currentDevice = route.inputs[0];
 
-        if(self.currentDevice) {
-            if([self.currentDevice.portType isEqualToString:AVAudioSessionPortHeadphones] ||
-               [self.currentDevice.portType isEqualToString:AVAudioSessionPortBuiltInMic]) {
-                self.isConnected = YES;
+            if(self.currentDevice) {
+                if([self.currentDevice.portType isEqualToString:AVAudioSessionPortHeadphones] ||
+                [self.currentDevice.portType isEqualToString:AVAudioSessionPortBuiltInMic]) {
+                    self.isConnected = YES;
+                }
             }
         }
     }
@@ -61,6 +63,7 @@
         // Likely something related to their test harness.
         // The issue is that an exception occurs dereferencing route.inputs.
         // We don't need that info yet, so can wait to get it later.
+        // Feb 3, 2023 added check on count of route.inputs entries above so this is unlikely to happen any more.
         self.currentDevice = nil;
         NSLog(@"[hc] Unable to determine the current device.");
     }
@@ -68,28 +71,39 @@
 
 - (void)routeChanged:(NSNotification *)notification {
     NSNumber *reason = [notification.userInfo objectForKey:AVAudioSessionRouteChangeReasonKey];
+    NSArray<AVAudioSessionPortDescription *> *inputs;
+    AVAudioSessionPortDescription *port;
 
     DBG(@"[hc] routeChanged");
+
+    inputs = [self.audioSession.currentRoute inputs];
+    if([inputs count] < 1) {
+        NSLog(@"[hc] No inputs for current route! UNKNOWN change. ****");
+        port = nil;
+    } else {
+        port = inputs[0];
+    }
 
     if ([reason unsignedIntegerValue] == AVAudioSessionRouteChangeReasonNewDeviceAvailable) {
         NSLog(@"[hc] AVAudioSessionRouteChangeReasonNewDeviceAvailable");
         [self logRouteInformation:self.audioSession.currentRoute];
-        [self connectToDevice:self.audioSession.currentRoute.inputs[0] isRouteChange:YES fireConnectEvents:NO];
+        [self connectToDevice:port isRouteChange:YES fireConnectEvents:NO];
     } else if ([reason unsignedIntegerValue] == AVAudioSessionRouteChangeReasonOldDeviceUnavailable) {
         NSLog(@"[hc] AVAudioSessionRouteChangeReasonOldDeviceUnavailable");
         [self logRouteInformation:[notification.userInfo objectForKey:AVAudioSessionRouteChangePreviousRouteKey]];
         [self logRouteInformation:self.audioSession.currentRoute];
         NSLog(@"[hc] New route:");
-        [self connectToDevice:self.audioSession.currentRoute.inputs[0] isRouteChange:YES fireConnectEvents:NO];
+        [self connectToDevice:port isRouteChange:YES fireConnectEvents:NO];
     } else if ([reason unsignedIntegerValue] == AVAudioSessionRouteChangeReasonCategoryChange) {
         NSLog(@"[hc] AVAudioSessionRouteChangeReasonCategoryChange");
         NSLog(@"[hc] AVAudioSession category: %@, categoryOptions = %d",
               [self.audioSession category], (int) self.audioSession.categoryOptions);
 
-        if(!self.currentDevice ||
-           ![self.currentDevice.portType isEqualToString:self.audioSession.currentRoute.inputs[0].portType]) {
+        [self logRouteInformation:self.audioSession.currentRoute];
+
+        if(!self.currentDevice || port == nil || ![self.currentDevice.portType isEqualToString:port.portType]) {
             NSLog(@"[hc] input port has changed. Performing route change.");
-            [self connectToDevice:self.audioSession.currentRoute.inputs[0] isRouteChange:YES fireConnectEvents:NO];
+            [self connectToDevice:port isRouteChange:YES fireConnectEvents:NO];
         }
     } else {
         NSLog(@"[hc] Unknown route change reason: %u", (unsigned)[reason unsignedIntegerValue]);
@@ -122,6 +136,8 @@
             bluetooth = YES;
         }
     }
+
+    route = [self.audioSession currentRoute];
 
     [self logRouteInformation:route];
 
@@ -156,12 +172,14 @@
     if(!self.currentDevice) {
         route = self.audioSession.currentRoute;
         @try {
-            self.currentDevice = route.inputs[0];
+            if([route.inputs count] > 0) {
+                self.currentDevice = route.inputs[0];
 
-            if(self.currentDevice) {
-                if([self.currentDevice.portType isEqualToString:AVAudioSessionPortHeadphones] ||
-                   [self.currentDevice.portType isEqualToString:AVAudioSessionPortBuiltInMic]) {
-                    self.isConnected = YES;
+                if(self.currentDevice) {
+                    if([self.currentDevice.portType isEqualToString:AVAudioSessionPortHeadphones] ||
+                    [self.currentDevice.portType isEqualToString:AVAudioSessionPortBuiltInMic]) {
+                        self.isConnected = YES;
+                    }
                 }
             }
         }
@@ -170,6 +188,7 @@
             // Likely something related to their test harness.
             // The issue is that an exception occurs dereferencing route.inputs.
             // We don't need that info yet, so can wait to get it later.
+            // Feb 3, 2023 added check on count of route.inputs entries above so this is unlikely to happen any more.
             self.currentDevice = nil;
             NSLog(@"[hc] Unable to determine current device.");
         }
@@ -186,16 +205,42 @@
 - (void) connect:(CDVInvokedUrlCommand*)command {
     AVAudioSessionPortDescription *port;
     AVAudioSessionRouteDescription *route;
+    NSArray<AVAudioSessionPortDescription *> *inputs;
+    CDVPluginResult * pluginResult;
+    BOOL routeChange = NO;
 
     DBG(@"[hc] connect()");
 
-    CDVPluginResult * pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK];
-    [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
-
     route = [self.audioSession currentRoute];
-    port = route.inputs[0];
+    if([route.inputs count] > 0) {
+        port = route.inputs[0];
+        routeChange = NO;
+    } else {
+        NSLog(@"[hc] connect() - no inputs for the current route!");
+        [self logRouteInformation:route];
 
-    [self connectToDevice:port isRouteChange:NO fireConnectEvents:YES];
+        routeChange = YES;
+
+        inputs = [self.audioSession availableInputs];
+        if([inputs count] > 0) {
+            port = inputs[0];
+            NSLog(@"[hc] connect() - first available input is %@", [port portName]);
+        } else {
+            port = nil;
+            NSLog(@"[hc] connect() - no inputs available! ***");
+        }
+    }
+
+    if(port) {
+        pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK];
+        [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
+
+        [self connectToDevice:port isRouteChange:routeChange fireConnectEvents:YES];
+    } else {
+        // No port available!
+        pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:@"No audio import ports found."];
+        [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
+    }
 }
 
 - (void) disconnect:(CDVInvokedUrlCommand*)command {
@@ -204,7 +249,7 @@
     CDVPluginResult * pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK];
     [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
 
-    [self disconnectFromCurrentDevice:NO fireDisconnectEvents:YES];
+    [self disconnectFromCurrentDevice:YES fireDisconnectEvents:YES];
 }
 
 -(void) fireConnectEvent:(NSString *) type forDevice:(NSString *) deviceType withSubType:(NSString *) subType withName:(NSString *) name
@@ -290,13 +335,20 @@
     }
 
     self.isConnected = NO;
+    self.currentDevice = nil;
 }
 
 -(void) connectToDevice:(AVAudioSessionPortDescription *) port isRouteChange:(BOOL) routeChange fireConnectEvents:(BOOL) connectEvents
 {
     BOOL doConnect = self.isConnected || connectEvents;
 
-    DBG1(@"[hc] connectToDevice: %@", port.portType);
+    DBG(@"[hc] connectToDevice()");
+
+    if(!port) {
+        DBG(@"[hc] no port specified! Send disconnect events.");
+        [self disconnectFromCurrentDevice:YES fireDisconnectEvents:YES];
+        return;
+    }
 
     if(routeChange) {
         [self disconnectFromCurrentDevice:routeChange fireDisconnectEvents:NO];
@@ -305,6 +357,8 @@
     if(self.isConnected && ![port.portType isEqualToString:self.currentDevice.portType]) {
         [self disconnectFromCurrentDevice:NO fireDisconnectEvents:NO];
     }
+
+    DBG1(@"[hc] connect to port: %@", port.portType);
 
     if([port.portType isEqualToString:AVAudioSessionPortBluetoothHFP]) {
         if(doConnect) {
@@ -359,6 +413,8 @@
     int i;
     NSArray<AVAudioSessionPortDescription *> *ports;
     AVAudioSessionPortDescription *port;
+
+    NSLog(@"[hc] logRouteInformation()");
 
     ports = route.inputs;
 
