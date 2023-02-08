@@ -12,53 +12,61 @@ var exec = require('cordova/exec');
 /**
  * Cordova plugin for control of Bluetooth headsets.
  *
- * @class Cordova plugin for control of Bluetooth headsets.
+ * @class Cordova plugin for monitor and control of connections to Bluetooth headsets.
  */
 function HeadsetControl() {
     /** Connected state of the headset.
      * @type boolean
-     * @default false;
+     * @default false
      */
     this.connected = false;
 
     /** Fired for all events.
+     * Called with the event as its only parameter.
      * @type function
      */
     this.onevent = null;
 
     /** Fired for events related to the in process connection of a device.
-     *  May not be called for all devices.
+     * Called with the event as its only parameter.
+     * May not be called for all devices.
      * @type function
      */
     this.onconnecting = null;
 
     /** Fired for events related to the pending connection of a device.
+     * Called with the event as its only parameter.
      * @type function
      */
     this.onconnect = null;
 
     /** Fired for events related to the in process disconnection of a device.
-     *  May not be called for all devices.
+     * Called with the event as its only parameter.
+     * May not be called for all devices.
      * @type function
      */
     this.ondisconnecting = null;
 
     /** Fired for events related to the pending disconnection of a device.
+     * Called with the event as its only parameter.
      * @type function
      */
     this.ondisconnect = null;
 
     /** Fired for events related to the completed connection of a device.
+     * Called with the event as its only parameter.
      * @type function
      */
     this.onconnected = null;
 
     /** Fired for events related to the completed disconnection of a device.
+     * Called with the event as its only parameter.
      * @type function
      */
     this.ondisconnected = null;
 
     /** Fired for errors.
+     * Called with the error string as its only parameter.
      * @type function
      */
     this.onerror = null;
@@ -67,7 +75,7 @@ function HeadsetControl() {
      * @type boolean
      * @default false
      */
-    this.logging = false
+    this.logging = false;
 
     /** Connect timer.
      * @private
@@ -89,7 +97,7 @@ HeadsetControl.prototype.log = function (t, always) {
     }
 }
 
-  /**
+/**
  * Initialize the plugin.
  * @private
  */
@@ -208,7 +216,11 @@ HeadsetControl.prototype.getStatus = function (success, failure) {
 };
 
 /**
- * Get the permission status of the plugin.
+ * Request the required permissions from the OS.
+ * This function must be called at least once in order to obtain the required permissions.
+ * Ideally this function would be called just prior to the first call to {@link connect} to
+ * associate the permission request with the action.
+ *
  * @param {function} [success] The success callback. The plugin has the required permissions.
  * @param {function} [failure] The failure callback. The plugin does not have the required permissions.
  */
